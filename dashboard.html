@@ -201,7 +201,7 @@ select.lang{font-family:var(--mono);font-size:11px;color:var(--ink);background:#
 .cart{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);margin-bottom:6px}
 .cart .ci{font-family:var(--px);font-size:10px;color:var(--gold);min-width:18px}.cart .cn{flex:1}.cart .cc{color:var(--gold);font-weight:700}
 .spark{width:100%;height:90px;display:block}
-</style></head><body><div class="wrap" id="stage"><div class="top"><div class="logo">TBH <b>CO·PILOT</b></div><div class="live"><span class="dot" id="dot"></span><span id="connTxt">—</span></div><div class="sp"></div><select class="lang" id="lang"></select><div class="chip" id="ptime">—</div><div class="chip" id="ver">v—</div></div><div class="banner" id="banner"></div><div class="strip"><div class="s-gold"><div class="lbl"><span id="lblGold">GOLD</span></div><div class="num" id="gold">0</div><div class="sub"><b id="ghr">—</b><span id="lblPerH">/h</span> · <span id="curStage">—</span></div></div><div class="s-stat"><div class="k" id="lblPow">POWER</div><div class="v pow" id="partyPow">—</div><div class="sm" id="partyDps">—</div></div></div><div class="tabs" id="tabs"></div><div class="pane" id="pane-overview"><div id="ovHeroes"></div><div class="grid2"><div class="panel"><div class="ptitle" id="tDoNow">DO NOW</div><div id="doNow"></div></div><div class="panel"><div class="ptitle" style="--c:var(--good)" id="tSummary">SUMMARY</div><div id="ovSummary"></div></div></div></div><div class="pane" id="pane-farm"><div class="grid2"><div class="panel"><div class="ptitle" style="--c:var(--exp)" id="tFarm2">FARM</div><div id="farm"></div></div><div class="panel"><div class="ptitle" style="--c:var(--warn)" id="tIdle2">IDLE</div><div id="idle"></div></div></div></div><div class="pane" id="pane-runes"><div class="panel"><div class="ptitle" style="--c:var(--pow)" id="tRunes2">RUNES</div><div class="treewrap"><svg id="tree" preserveAspectRatio="xMidYMid meet"></svg><div class="tctl"><button id="tFit">⤢</button><button id="tIn">+</button><button id="tOut">−</button></div><div class="thint" id="thint"></div><div class="tdetail" id="tdetail"></div></div><div class="legend" id="legend"></div></div><div class="panel"><div class="ptitle" style="--c:var(--gold)" id="tReco">RECOMENDAR</div><div class="catbtns" id="catBtns"></div><div id="recoList"></div></div></div><div class="pane" id="pane-whatif"><div class="panel"><div class="ptitle" style="--c:#9db4ff">GEAR · comparar equipamentos</div><div class="wf-controls"><span class="sub">herói</span><select id="wfHero"></select><span class="sub">— clique num slot pra comparar todos os itens (os seus e os que você não tem) —</span></div><div class="slotbar" id="wfSlots"></div><div id="wfCands"></div></div></div><div class="pane" id="pane-hist"><div class="panel"><div class="ptitle" style="--c:var(--pow)">HISTÓRICO · POWER</div><svg class="spark" id="sparkPow" preserveAspectRatio="none"></svg><div id="histPow" class="sub"></div></div><div class="panel"><div class="ptitle" style="--c:var(--gold)">HISTÓRICO · GOLD</div><svg class="spark" id="sparkGold" preserveAspectRatio="none"></svg><div id="histGold" class="sub"></div></div><div class="note">O histórico acumula a cada leitura do save (guardado local no navegador). Deixe aberto enquanto joga.</div></div><div class="foot" id="foot">100% local</div></div><div class="gate" id="gate"><div class="gcard"><div class="glogo">TBH <b>CO·PILOT</b></div><p id="gateMsg">—</p><button class="btn" id="connectBtn"> CONNECT</button><button class="btn ghost" id="demoBtn">demo</button><div class="gerr" id="gerr"></div><div class="gnote">SaveFile_Live.es3 · AppData\LocalLow\TesseractStudio\TaskbarHero</div></div></div><div class="hsheet" id="hsheet"><div class="hs-card" id="hsCard"></div></div><script src="engine/gamedata.js?v=3"></script><script src="engine/i18n.js?v=3"></script><script src="engine/engine.js?v=3"></script><script src="engine/demo.js?v=3"></script><script>
+</style></head><body><div class="wrap" id="stage"><div class="top"><div class="logo">TBH <b>CO·PILOT</b></div><div class="live"><span class="dot" id="dot"></span><span id="connTxt">—</span></div><div class="sp"></div><select class="lang" id="lang"></select><div class="chip" id="ptime">—</div><div class="chip" id="ver">v—</div></div><div class="banner" id="banner"></div><div class="strip"><div class="s-gold"><div class="lbl"><span id="lblGold">GOLD</span></div><div class="num" id="gold">0</div><div class="sub"><b id="ghr">—</b><span id="lblPerH">/h</span> · <span id="curStage">—</span></div></div><div class="s-stat"><div class="k" id="lblPow">POWER</div><div class="v pow" id="partyPow">—</div><div class="sm" id="partyDps">—</div></div></div><div class="tabs" id="tabs"></div><div class="pane" id="pane-overview"><div id="ovHeroes"></div><div class="grid2"><div class="panel"><div class="ptitle" id="tDoNow">DO NOW</div><div id="doNow"></div></div><div class="panel"><div class="ptitle" style="--c:var(--good)" id="tSummary">SUMMARY</div><div id="ovSummary"></div></div></div></div><div class="pane" id="pane-farm"><div class="grid2"><div class="panel"><div class="ptitle" style="--c:var(--exp)" id="tFarm2">FARM</div><div id="farm"></div></div><div class="panel"><div class="ptitle" style="--c:var(--warn)" id="tIdle2">IDLE</div><div id="idle"></div></div></div></div><div class="pane" id="pane-runes"><div class="panel"><div class="ptitle" style="--c:var(--pow)" id="tRunes2">RUNES</div><div class="treewrap"><svg id="tree" preserveAspectRatio="xMidYMid meet"></svg><div class="tctl"><button id="tFit">⤢</button><button id="tIn">+</button><button id="tOut">−</button></div><div class="thint" id="thint"></div><div class="tdetail" id="tdetail"></div></div><div class="legend" id="legend"></div></div><div class="panel"><div class="ptitle" style="--c:var(--gold)" id="tReco">RECOMENDAR</div><div class="catbtns" id="catBtns"></div><div id="recoList"></div></div></div><div class="pane" id="pane-whatif"><div class="panel"><div class="ptitle" style="--c:#9db4ff" id="tGear">GEAR</div><div class="wf-controls"><span class="sub" id="wfHeroLbl">hero</span><select id="wfHero"></select><span class="sub" id="wfHint">—</span></div><div class="slotbar" id="wfSlots"></div><div id="wfCands"></div></div></div><div class="pane" id="pane-hist"><div class="panel"><div class="ptitle" style="--c:var(--pow)">HISTÓRICO · POWER</div><svg class="spark" id="sparkPow" preserveAspectRatio="none"></svg><div id="histPow" class="sub"></div></div><div class="panel"><div class="ptitle" style="--c:var(--gold)">HISTÓRICO · GOLD</div><svg class="spark" id="sparkGold" preserveAspectRatio="none"></svg><div id="histGold" class="sub"></div></div><div class="note">O histórico acumula a cada leitura do save (guardado local no navegador). Deixe aberto enquanto joga.</div></div><div class="foot" id="foot">100% local</div></div><div class="gate" id="gate"><div class="gcard"><div class="glogo">TBH <b>CO·PILOT</b></div><p id="gateMsg">—</p><button class="btn" id="connectBtn"> CONNECT</button><button class="btn ghost" id="demoBtn">demo</button><div class="gerr" id="gerr"></div><div class="gnote">SaveFile_Live.es3 · AppData\LocalLow\TesseractStudio\TaskbarHero</div></div></div><div class="hsheet" id="hsheet"><div class="hs-card" id="hsCard"></div></div><script src="engine/gamedata.js?v=4"></script><script src="engine/i18n.js?v=4"></script><script src="engine/engine.js?v=4"></script><script src="engine/demo.js?v=4"></script><script>
 const PASSWORD='emuMqG3bLYJ938ZDCfieWJ';
 const $=id=>document.getElementById(id);
 const DB=window.TBH_DB,I18N=window.TBH_I18N,ENG=window.TBHEngine;
@@ -262,7 +262,6 @@ function expPerSec(){return rateOf('x');}
 let REC=null,PSD=null,demoMode=false,wfHero=null,wfSlot=null;
 const dpClass=d=>d>0.5?'pos':d<-0.5?'neg':'zero';
 const dpStr=d=>(d>0?'+':'')+fmt(d);
-const SLOT_NAMES=['Arma','Sec','Elmo','Peito','Luvas','Botas','Amul','Brinco','Anel','Brac'];
 function slotGearType(heroKey,slot){
  if(REC){const s=REC.gear.slots.find(x=>x.heroKey===heroKey&&x.slot===slot);if(s)return s.gearType;}
  const h=DB.heroes[String(heroKey)]||{};
@@ -271,16 +270,18 @@ function slotGearType(heroKey,slot){
 }
 function renderWhatIf(){
  if(!REC){$('wfCands').innerHTML='';return;}
+ $('wfHeroLbl').textContent=t('g_hero');$('wfHint').textContent='— '+t('g_hint')+' —';
+ const SLOT_NAMES=t('g_slots').split(',');
  const party=REC.meta.party;
  if(wfHero==null)wfHero=REC.meta.carryHero||party[0];
  $('wfHero').innerHTML=party.map(k=>`<option value="${k}"${k===wfHero?' selected':''}>${heroName(k)}</option>`).join('');
  $('wfHero').onchange=()=>{wfHero=+$('wfHero').value;wfSlot=null;renderWhatIf();};
  const slots=REC.gear.slots.filter(s=>s.heroKey===wfHero).sort((a,b)=>a.slot-b.slot);
  $('wfSlots').innerHTML=slots.map(s=>{const lvl=s.current?`<span class="lv">${s.current.level}</span>`:'';
- return `<div class="slotcell ${s.slot===wfSlot?'on':''} ${s.current?'':'empty'}" data-slot="${s.slot}">${SLOT_NAMES[s.slot]}${lvl}</div>`;}).join('');
+ return `<div class="slotcell ${s.slot===wfSlot?'on':''} ${s.current?'':'empty'}" data-slot="${s.slot}">${SLOT_NAMES[s.slot]||s.slot}${lvl}</div>`;}).join('');
  $('wfSlots').querySelectorAll('.slotcell').forEach(c=>c.onclick=()=>{wfSlot=+c.dataset.slot;renderWhatIf();});
- if(wfSlot==null){$('wfCands').innerHTML='<div class="note">Selecione um slot acima pra comparar equipamentos (os que você tem e os que não tem).</div>';return;}
- if(demoMode||!PSD){$('wfCands').innerHTML='<div class="note">A comparação completa precisa do save conectado — ela testa cada item, inclusive os que você ainda não tem.</div>';return;}
+ if(wfSlot==null){$('wfCands').innerHTML=`<div class="note">${t('g_pick')}</div>`;return;}
+ if(demoMode||!PSD){$('wfCands').innerHTML=`<div class="note">${t('g_needsave')}</div>`;return;}
  const gt=slotGearType(wfHero,wfSlot);
  const hsm=ENG.heroSaveMap(PSD), heroSave=hsm[wfHero];
  const equippedElsewhere=new Set();
@@ -293,17 +294,18 @@ function renderWhatIf(){
  const d=ENG.powerDelta(heroSave,PSD,wfSlot,it.ItemKey);
  cands.push({key:it.ItemKey,grade:idb.grade,level:idb.lvl,dPower:d.dPower,dDps:d.dDps,dEhp:d.dEhp,equipped:it.UniqueId===curUid});}
  if(curUid){const d=ENG.powerDelta(heroSave,PSD,wfSlot,null);cands.push({key:null,grade:'—',level:0,dPower:d.dPower,dDps:d.dDps,dEhp:d.dEhp,empty:true});}
- const lvlCap=(((REC.farm||{}).frontier||{}).lvl||REC.meta.maxPartyLevel||REC.meta.partyLevel||30)+10;
+ const lvlCap=(((REC.farm||{}).frontier||{}).lvl)||(((REC.farm||{}).partyLevel)||26)+3;
  for(const ik in DB.items){const idb=DB.items[ik];if(idb.gt!==gt||idb.lvl>lvlCap)continue;const key=+ik;if(ownedKeys.has(key))continue;
  const d=ENG.powerDelta(heroSave,PSD,wfSlot,key);if(!d||!isFinite(d.dPower))continue;
  cands.push({key,grade:idb.grade,level:idb.lvl,dPower:d.dPower,dDps:d.dDps,dEhp:d.dEhp,notOwned:true});}
  cands.sort((a,b)=>b.dPower-a.dPower);
  const maxd=Math.max(0,...cands.map(c=>c.dPower)),shown=cands.slice(0,22);
  $('wfCands').innerHTML=(shown.length?shown.map(c=>{const best=c.dPower>0&&c.dPower===maxd;
- const name=c.empty?'(esvaziar slot)':`${titlecase(gt)} ${c.grade}`;
- const tag=c.equipped?'<span class="pill good">EQUIPADO</span>':best?'<span class="pill good">MELHOR</span>':c.notOwned?'<span class="pill">não tem</span>':'';
- return `<div class="cand ${c.equipped?'eq':''} ${best?'best':''}"${c.notOwned?' style="opacity:.82"':''}><div class="cn"><div class="cgt">${name} ${tag}</div><div class="cmeta">${c.empty?'':('nv '+c.level+' · ')}ΔDPS ${dpStr(c.dDps)} · ΔEHP ${dpStr(c.dEhp)}</div></div><div class="dp ${dpClass(c.dPower)}">${dpStr(c.dPower)}<div class="sub">ΔPOWER</div></div></div>`;
- }).join(''):'<div class="note">Nenhum equipamento desse tipo no jogo.</div>')+(cands.length>shown.length?`<div class="note">+${cands.length-shown.length} itens com ganho menor ocultos.</div>`:'');
+ const name=c.empty?t('g_empty'):`${titlecase(gt)} ${c.grade}`;
+ const tag=c.equipped?`<span class="pill good">${t('g_equipped')}</span>`:best?`<span class="pill good">${t('g_best')}</span>`:c.notOwned?`<span class="pill">${t('g_dont')}</span>`:'';
+ const ico=c.key?`<img src="${itemIcon(c.key)}" style="width:34px;height:34px;border-radius:7px;object-fit:contain;flex:none;background:#0a0e16;padding:2px" onerror="this.style.visibility='hidden'">`:`<div style="width:34px;height:34px;border-radius:7px;border:1px dashed var(--line2);flex:none"></div>`;
+ return `<div class="cand ${c.equipped?'eq':''} ${best?'best':''}"${c.notOwned?' style="opacity:.82"':''}>${ico}<div class="cn"><div class="cgt">${name} ${tag}</div><div class="cmeta">${c.empty?'':(t('lv_short')+c.level+' · ')}ΔDPS ${dpStr(c.dDps)} · ΔEHP ${dpStr(c.dEhp)}</div></div><div class="dp ${dpClass(c.dPower)}">${dpStr(c.dPower)}<div class="sub">ΔPOWER</div></div></div>`;
+ }).join(''):`<div class="note">${t('g_noitems')}</div>`)+(cands.length>shown.length?`<div class="note">${t('g_hidden',cands.length-shown.length)}</div>`:'');
 }
 const hdb=()=>new Promise((res,rej)=>{const r=indexedDB.open('tbh_lab',1);r.onupgradeneeded=()=>r.result.createObjectStore('hist',{keyPath:'t'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
 async function histPut(rec){try{const db=await hdb();const power=rec.heroes.reduce((a,h)=>a+h.power,0);const pt=rec.__pt||0;if(!pt)return;
@@ -330,7 +332,7 @@ function render(rec,meta){
  lastRec=rec;REC=rec;lastMeta=meta;
  $('foot').textContent=t('footer');$('lblGold').textContent=t('gold');$('lblPerH').textContent=t('per_hour');$('lblPow').textContent=t('power');
  $('tDoNow').textContent=t('do_now');$('tSummary').textContent=t('summary');
- $('tFarm2').textContent=t('farming');$('tIdle2').textContent=t('idle_title');$('tRunes2').textContent=t('tree_title');
+ $('tFarm2').textContent=t('farming');$('tIdle2').textContent=t('idle_title');$('tRunes2').textContent=t('tree_title');$('tGear').textContent=t('g_title');
  tween($('gold'),meta.gold);$('ghr').textContent=meta.goldPerHour!=null?fmt(meta.goldPerHour):'…';
  $('ptime').innerHTML='<b>'+(meta.playTimeH!=null?meta.playTimeH+'h':'—')+'</b>';$('ver').textContent='v'+(meta.version||'—');
  $('curStage').innerHTML='['+stageLabel(rec.meta.currentStage)+'] '+stageName(rec.meta.currentStage);
