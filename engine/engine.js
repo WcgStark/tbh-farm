@@ -224,7 +224,7 @@
  }
  function clearTime(s, D) { return (s.totalHP / Math.max(1, D)) + PARAMS.T_WAVE * s.waves + PARAMS.T_FIXED; }
  function fitFactor(partyLevel, stageLvl) {
- return Math.min(1, Math.max(0.01, 1 / (1 + Math.exp((partyLevel - stageLvl - 9) * (2 / 3)))));
+ return Math.min(1, Math.max(0.01, 1 / (1 + Math.exp((partyLevel - stageLvl - 8) * (2 / 3)))));
  }
  function farmBonuses(psd) {
  const rc = runeContrib(psd);
