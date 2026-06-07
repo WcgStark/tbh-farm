@@ -436,7 +436,7 @@ function renderFarm(rec){
  h+=card('push',t('f_unlock'),f.push,rd);}
  if(f.calibrated===false)h+=`<div class="note">${t('f_calnone')}</div>`;
  $('farm').innerHTML=h||'<div class="note">—</div>';
- const tb=farmTable(rec,pt)+calEditUI(rec);
+ const tb=calEditUI(rec)+farmTable(rec,pt);
  $('farmtable').innerHTML=tb;
  const fp=$('fpTable');if(fp)fp.style.display=tb?'':'none';
  document.querySelectorAll('.fsort').forEach(b=>b.onclick=()=>{farmSort=b.dataset.s;localStorage.setItem('tbh_farmsort',farmSort);if(lastRec)renderFarm(lastRec);});
