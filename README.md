@@ -30,8 +30,7 @@ nothing ever leaves your machine.
 | **Farm optimizer** | The wiki Farming Optimizer idea, automated. It calibrates your real clear rate from your measured gold/sec and ranks every cleared stage by gold/hour and exp/hour, with a sortable table (clear time, EXP/HP and Gold/HP density). It sends you to the dense, fast stage instead of an unclearable floor. |
 | **Idle / return timer** | Offline reward curve, the optimal time to come back (the 8 h cap), and what to park on first. |
 | **Interactive rune tree** | All 197 nodes laid out and colored by category. Pick a category (EXP, Combat, Gold, Items, Chest, Inventory, Offline, Utility) and the tree highlights that branch and lists the three cheapest buyable nodes. Almost-free runes are called out. |
-| **Build planners** | Power delta per rune, the cheapest path to your first DPS rune, an ordered gold-spend cart, attribute-point and enchant advice, pet and synthesis tips, in the Build and Economy tabs. |
-| **Gear advisor** | Per slot "is it worth swapping?" with the POWER delta of any change, plus empty-jewelry and enchant nudges. |
+| **Gear comparator** | For any slot, the POWER delta of every item: the ones in your bag and the ones you don't have yet (capped to gear you can realistically farm), so you can see what to aim for. |
 | **16 languages** | UI and game content localized; the stat model is calibrated against the in-game Status panel. |
 
 <div align="center">
@@ -48,9 +47,8 @@ nothing ever leaves your machine.
    `%USERPROFILE%\AppData\LocalLow\TesseractStudio\TaskbarHero\SaveFile_Live.es3`
 3. Done. It tracks the save live and updates as you play. Or click "demo" to look around first.
 
-Everything lives on this one page: alongside the overview, farm, runes and gear tabs there are the
-**What-if** simulator (POWER delta of every item in your bag), **Build**, **Economy**, **Drops**,
-**Goals**, **History** charts and **Config** tabs.
+Everything lives on this one page: an **Overview** (party roster and what-to-do-now), the **Farm**
+optimizer, the **Runes** tree, a **Gear** comparator, and **History** charts.
 
 ## How it works
 
