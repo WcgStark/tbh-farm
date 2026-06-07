@@ -253,8 +253,10 @@
  const partyLevel = maxPartyLevel(psd);
  const partySize = Math.max(1, party(psd).length);
  const maxC = psd.commonSaveData.maxCompletedStage, curKey = String(psd.commonSaveData.currentStageKey);
- const ord = DB.stageOrder, idxMax = ord.indexOf(Number(maxC));
+ const ord = DB.stageOrder;
  const idxOf = k => ord.indexOf(Number(k));
+ let idxMax = idxOf(maxC);
+ if (idxMax < 0) idxMax = idxOf(curKey);
  const curStage = DB.stages[curKey];
 
  let Dcal = Math.max(1, D), tWave = PARAMS.T_WAVE, calibrated = false, calSource = 'model';
