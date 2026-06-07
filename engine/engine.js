@@ -255,7 +255,7 @@
  const maxC = psd.commonSaveData.maxCompletedStage, curKey = String(psd.commonSaveData.currentStageKey);
  const ord = DB.stageOrder;
  const idxOf = k => ord.indexOf(Number(k));
- let idxMax = idxOf(maxC);
+ let idxMax = idxOf(maxC) - 1;
  if (idxMax < 0) idxMax = idxOf(curKey);
  const curStage = DB.stages[curKey];
 
@@ -634,9 +634,17 @@
  return { gold: have, cart, totalCost: spent, totalPower: cart.reduce((a, c) => a + c.dPower, 0) };
  }
 
+ function lastClearedKey(psd) {
+ const cs = psd.commonSaveData || {}, ord = DB.stageOrder;
+ const i = ord.indexOf(Number(cs.maxCompletedStage));
+ if (i > 0) return String(ord[i - 1]);
+ const ic = ord.indexOf(Number(cs.currentStageKey));
+ return ic >= 0 ? String(ord[ic]) : null;
+ }
+
  function goalPlan(psd, heroes, D, targetKey) {
  const s = DB.stages[String(targetKey)]; if (!s) return null;
- const refKey = String((psd.commonSaveData || {}).maxCompletedStage);
+ const refKey = lastClearedKey(psd);
  const sv = survival(psd, heroes, D, targetKey, DB.stages[refKey] ? refKey : targetKey);
  return { stage: String(targetKey), label: s.label, level: s.lvl, levelGap: Math.max(0, s.lvl - maxPartyLevel(psd)),
  readiness: sv ? sv.readiness : null, rating: sv ? sv.rating : null, needsMorePower: sv ? sv.readiness < 0.8 : false };
@@ -678,7 +686,7 @@
  const runeTree = runeTreeStatus(psd, opts.goldPerSec, refSL);
  const gear = gearAdvisor(psd, refSL);
  const pushKey = farm.push ? farm.push.key : (farm.frontier && farm.frontier.key);
- const refKey = String((psd.commonSaveData || {}).maxCompletedStage);
+ const refKey = lastClearedKey(psd);
  const surv = pushKey ? survival(psd, heroes, D, pushKey, DB.stages[refKey] ? refKey : null) : null;
  const comp = partyComp(psd);
  const enchant = enchantAdvisor(psd, refSL);
