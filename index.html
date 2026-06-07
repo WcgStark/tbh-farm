@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TBH Co-pilot</title>
+<meta name="description" content="A local, free optimization companion for the idle-RPG TBH: Task Bar Hero. Reads your save in the browser and tells you the optimal next move.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#080a10;--panel:#10141f;--bg2:#0c0f18;--line:#1d2536;--line2:#2a3550;
+ --ink:#cdd8f2;--mut:#67769b;--dim:#48566f;
+ --gold:#f6c552;--exp:#5fd0e0;--good:#74d28e;--violet:#a98cff;
+ --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;--px:'Silkscreen',var(--mono);
+}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1200px 600px at 80% -10%,#161d33 0,transparent 55%),radial-gradient(900px 500px at 10% 110%,#131a2b 0,transparent 55%),var(--bg);
+ color:var(--ink);font-family:var(--mono);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
+.card{width:min(680px,100%)}
+.logo{font-family:var(--px);font-size:22px;letter-spacing:1px;color:#eaf0ff;margin-bottom:4px}.logo b{color:var(--gold)}
+.tag{color:var(--mut);font-size:14px;margin:10px 0 22px;max-width:560px}
+.tag b{color:var(--ink);font-weight:700}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+a.btn{font-family:var(--px);font-size:12px;text-decoration:none;border-radius:11px;padding:14px 22px;cursor:pointer;
+ background:linear-gradient(180deg,#f6c552,#e0a93a);color:#1a1306;box-shadow:0 10px 28px -12px #f6c55288}
+a.btn.ghost{background:#0d1220;color:var(--ink);border:1px solid var(--line2);box-shadow:none}
+a.btn.ghost b{color:var(--exp)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.feat{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--bg2));padding:13px 15px}
+.feat .h{font-family:var(--px);font-size:10px;letter-spacing:.5px;color:var(--gold);margin-bottom:6px}
+.feat.exp .h{color:var(--exp)}.feat.good .h{color:var(--good)}.feat.violet .h{color:var(--violet)}
+.feat p{margin:0;font-size:12.5px;color:var(--mut)}
+.note{font-size:12.5px;color:var(--mut);border:1px solid var(--line);border-radius:10px;background:#0c1018;padding:11px 13px;margin-bottom:20px}
+.note b{color:var(--ink)}
+.foot{font-size:12px;color:var(--dim)}
+.foot a{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="card">
+ <div class="logo">TBH <b>CO&middot;PILOT</b></div>
+ <div class="tag">An optimization companion for the idle-RPG <b>TBH: Task Bar Hero</b>. It reads your save
+  <b>locally in your browser</b>, decrypts it, and tells you the optimal next move: where to farm, when to
+  come back, when you'll level, and which runes and gear to get.</div>
+
+ <div class="cta">
+  <a class="btn" href="dashboard.html">Open the dashboard</a>
+  <a class="btn ghost" href="tools/lab.html">Open the <b>Lab</b></a>
+ </div>
+
+ <div class="grid">
+  <div class="feat"><div class="h">FARM</div><p>Ranks every cleared stage by gold/hour and exp/hour from your real clear speed.</p></div>
+  <div class="feat exp"><div class="h">RUNE TREE</div><p>All 197 nodes, with the cheapest buyable picks for the goal you choose.</p></div>
+  <div class="feat good"><div class="h">ROSTER &amp; GEAR</div><p>POWER, DPS and EHP per hero, plus the power delta of any gear swap.</p></div>
+  <div class="feat violet"><div class="h">IDLE</div><p>The best time to come back, and what to leave running while you're away.</p></div>
+ </div>
+
+ <div class="note"><b>Your save never leaves your computer.</b> Everything is read and decrypted in your browser,
+  with no servers and no tracking. Connecting a save needs <b>Chrome or Edge</b> (File System Access API);
+  any browser can open the read-only <b>demo</b>.</div>
+
+ <div class="foot">Free, no ads. Source on <a href="https://github.com/shigake/tbh-copilot">GitHub</a>.
+  Unofficial fan project, not affiliated with the game's developers.</div>
+</div>
+</body>
+</html>

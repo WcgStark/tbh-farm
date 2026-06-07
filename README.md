@@ -32,7 +32,6 @@ nothing ever leaves your machine.
 | **Interactive rune tree** | All 197 nodes laid out and colored by category. Pick a category (EXP, Combat, Gold, Items, Chest, Inventory, Offline, Utility) and the tree highlights that branch and lists the three cheapest buyable nodes. Almost-free runes are called out. |
 | **Build planners** | Power delta per rune, the cheapest path to your first DPS rune, an ordered gold-spend cart, attribute-point and enchant advice, pet and synthesis tips, all in the Lab. |
 | **Gear advisor** | Per slot "is it worth swapping?" with the POWER delta of any change, plus empty-jewelry and enchant nudges. |
-| **Background watcher** | A PowerShell notifier (`monitor.ps1`) that fires Windows toasts for the moments that matter: level-ups, a dropped item that is actually an upgrade, an almost-free rune you can afford, gold milestones, and more. |
 | **16 languages** | UI and game content localized; the stat model is calibrated against the in-game Status panel. |
 
 <div align="center">
@@ -52,30 +51,19 @@ nothing ever leaves your machine.
 **Lab (`tools/lab.html`)** is the what-if simulator (POWER delta per item), history charts, and the
 build, economy and drops panels.
 
-**Watcher (`monitor.ps1`)** gives background desktop notifications while the game idles in your taskbar:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File monitor.ps1
-powershell -ExecutionPolicy Bypass -File monitor.ps1 -NoToast
-```
-
-It needs [Node.js](https://nodejs.org) on PATH, because it reuses the same engine as the dashboard.
-
 ## How it works
 
 The save (encrypted ES3 / AES-CBC) is decrypted with Web Crypto, and the game data the app needs is bundled
 into `engine/gamedata.js`. There are no network calls at runtime, no backend, and no build step.
 
-One engine drives all three surfaces: `engine/engine.js` (UMD, runs in the browser and in Node) computes
+One engine drives both surfaces: `engine/engine.js` (UMD, runs in the browser and in Node) computes
 effective DPS/EHP/POWER, leveling, the calibrated farm optimizer, idle, the rune tree and planners, and the
-gear and enchant deltas. The dashboard, the Lab and the watcher all call the same `recommend()`. The stat
+gear and enchant deltas. The dashboard and the Lab both call the same `recommend()`. The stat
 model was checked against the in-game Status panel so the numbers match what the game shows.
 
 ```
 dashboard.html        the live dashboard (open this)
 tools/lab.html        the Lab: what-if, history, build, economy, drops
-monitor.ps1           background Windows-toast watcher
-monitor/advisor.cjs   Node bridge so the watcher reuses the engine
 engine/               engine.js, gamedata.js, i18n.js, demo.js, build scripts
 assets/               game icons and sprites the UI shows
 data/                 trimmed stage and rune tables

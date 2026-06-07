@@ -109,7 +109,8 @@ select.lang{font-family:var(--mono);font-size:11px;color:var(--ink);background:#
 .fcard.now .tag{color:var(--mut)}.fcard.rec{border-color:#3a5e3f;background:linear-gradient(100deg,#0e1a14,#0d1119)}.fcard.rec .tag{color:var(--good);border-color:#2f5a36}
 .fcard.gold{border-color:#5a4a1e;background:linear-gradient(100deg,#1a160e,#0d1119)}.fcard.gold .tag{color:var(--gold);border-color:#5a4a1e}
 .fcard.exp{border-color:#1e4a52;background:linear-gradient(100deg,#0e1a1e,#0d1119)}.fcard.exp .tag{color:var(--exp);border-color:#1e4a52}
-.fsort-row{display:flex;align-items:center;gap:8px;margin:14px 0 8px}
+.fcal{font-size:11px;color:var(--mut);margin:12px 0 2px}.fcal b{color:var(--ink);font-weight:700}.fcal .ok{color:var(--good)}
+.fsort-row{display:flex;align-items:center;gap:8px;margin:10px 0 8px}
 .fsort{font-family:var(--px);font-size:9px;color:var(--mut);background:#0d1119;border:1px solid var(--line);padding:5px 10px;border-radius:7px;cursor:pointer}
 .fsort.on{color:#0a0e16;background:var(--gold);border-color:var(--gold)}
 .ftable{width:100%;border-collapse:collapse;font-size:11.5px}
@@ -235,8 +236,11 @@ async function decryptSave(buf){
  return ENG.parseSave(JSON.parse(new TextDecoder().decode(out)).PlayerSaveData.value);
 }
 let samples=[];
-function sampleGold(pt,g){const l=samples[samples.length-1];if(!l||l.pt!==pt||l.g!==g)samples.push({pt,g});if(samples.length>400)samples.shift();}
-function goldPerSec(){if(samples.length<2)return null;let gain=0,d=0;for(let i=1;i<samples.length;i++){const dp=samples[i].pt-samples[i-1].pt,dg=samples[i].g-samples[i-1].g;if(dp>0){d+=dp;if(dg>0)gain+=dg;}}return d>0?gain/d:null;}
+function sampleGold(pt,g,x,c){const l=samples[samples.length-1];if(!l||l.pt!==pt||l.g!==g)samples.push({pt,g,x,c});if(samples.length>400)samples.shift();}
+function rateOf(f){if(samples.length<2)return null;let gain=0,d=0;for(let i=1;i<samples.length;i++){const dp=samples[i].pt-samples[i-1].pt,dg=(samples[i][f]||0)-(samples[i-1][f]||0);if(dp>0){d+=dp;if(dg>0)gain+=dg;}}return d>0?gain/d:null;}
+function clearSec(){if(samples.length<2)return null;let dc=0,d=0;for(let i=1;i<samples.length;i++){const dp=samples[i].pt-samples[i-1].pt,dcl=(samples[i].c||0)-(samples[i-1].c||0);if(dp>0&&dcl>0){d+=dp;dc+=dcl;}}return dc>0?d/dc:null;}
+function goldPerSec(){return rateOf('g');}
+function expPerSec(){return rateOf('x');}
 
 let lastRec=null,lastMeta=null;
 function render(rec,meta){
@@ -340,15 +344,17 @@ function farmTable(rec,pt){
  const key=farmSort==='exp'?'expPerHour':'goldPerHour';
  all.sort((a,b)=>b[key]-a[key]);
  const fmtH=n=>n==null?'-':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?Math.round(n/1e3)+'k':Math.round(n);
- const head=`<div class="fsort-row"><button class="fsort ${farmSort==='gold'?'on':''}" data-s="gold">GOLD/h</button><button class="fsort ${farmSort==='exp'?'on':''}" data-s="exp">EXP/h</button></div>`;
+ const cal=f.calibrated?(pt?'auto-calibrado pelo seu gold/exp por seg real':'auto-calibrated from your live gold/exp per sec'):(pt?'jogue uns segundos pra calibrar as taxas':'play a few seconds to calibrate the rates');
+ const info=`<div class="fcal">${pt?'nível':'level'} <b>${f.partyLevel||'?'}</b> · EXP <b>+${f.expBonusPct||0}%</b> · Gold <b>+${f.goldBonusPct||0}%</b> · <span class="${f.calibrated?'ok':''}">${cal}</span></div>`;
+ const head=info+`<div class="fsort-row"><button class="fsort ${farmSort==='exp'?'on':''}" data-s="exp">EXP/h</button><button class="fsort ${farmSort==='gold'?'on':''}" data-s="gold">GOLD/h</button></div>`;
+ const fitcol=v=>v>=0.9?'var(--good)':v>=0.5?'var(--mut)':'var(--dim)';
  const rows=all.map(r=>`<tr class="${r.key===cur?'cur':''}">`+
  `<td class="fs-st">${stageLabel(r.key)}<small> ${t('lv_short')}${r.lvl}</small></td>`+
  `<td>${fmtDur(r.clearTime)}</td>`+
- `<td class="fs-g">${fmtH(r.goldPerHour)}</td>`+
  `<td class="fs-x">${fmtH(r.expPerHour)}</td>`+
- `<td>${(r.expDensity||0).toFixed(3)}</td>`+
- `<td>${(r.goldDensity||0).toFixed(3)}</td></tr>`).join('');
- return head+`<table class="ftable"><thead><tr><th>${pt?'ESTÁGIO':'STAGE'}</th><th>CLEAR</th><th>GOLD/H</th><th>EXP/H</th><th>EXP/HP</th><th>GOLD/HP</th></tr></thead><tbody>${rows}</tbody></table>`;
+ `<td class="fs-g">${fmtH(r.goldPerHour)}</td>`+
+ `<td style="color:${fitcol(r.fit||0)}">${Math.round((r.fit||0)*100)}%</td></tr>`).join('');
+ return head+`<table class="ftable"><thead><tr><th>${pt?'ESTÁGIO':'STAGE'}</th><th>CLEAR</th><th>EXP/H</th><th>GOLD/H</th><th>FIT</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 function renderIdle(rec){
  const i=rec.idle;if(!i.unlocked){$('idle').innerHTML=`<div class="note">${t('idle_locked')}</div>`;return;}
@@ -498,8 +504,8 @@ let handle=null,lastMtime=-1,timer=null,pollMs=2000;
 function setLive(on){$('dot').classList.toggle('on',on);$('connTxt').textContent=on?t('live'):t('reconnecting');}
 async function readOnce(){try{
  const file=await handle.getFile();if(file.lastModified===lastMtime)return false;lastMtime=file.lastModified;
- const psd=await decryptSave(await file.arrayBuffer());const c=psd.commonSaveData;sampleGold(Math.round(c.playTime),ENG.gold(psd));
- const gps=goldPerSec();const rec=ENG.recommend(psd,{goldPerSec:gps!=null?gps:undefined,elapsedSec:0});
+ const psd=await decryptSave(await file.arrayBuffer());const c=psd.commonSaveData;sampleGold(Math.round(c.playTime),ENG.gold(psd),ENG.partyExp(psd),ENG.totalClears(psd));
+ const gps=goldPerSec(),eps=expPerSec(),cs=clearSec();const rec=ENG.recommend(psd,{goldPerSec:gps!=null?gps:undefined,expPerSec:eps!=null?eps:undefined,clearSec:cs!=null?cs:undefined,elapsedSec:0});
  render(rec,{gold:ENG.gold(psd),goldPerHour:gps!=null?Math.round(gps*3600):null,playTimeH:+(c.playTime/3600).toFixed(1),version:c.version});setLive(true);return true;
 }catch(e){if(e&&(e.name==='NotAllowedError'||e.name==='SecurityError')){setLive(false);openGate('reconnect');stopPoll();}
  else{$('banner').classList.add('show');$('banner').textContent=' '+t('decrypt_fail',String(e&&e.message||e));}return false;}}

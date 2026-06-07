@@ -16,7 +16,7 @@
  BASIC_ATTACK_MULT: 1.9,
 
  OFFLINE_CAP_SECONDS: 28800,
- T_WAVE: 1.2, T_FIXED: 2.0,
+ T_WAVE: 5.1, T_FIXED: 1.0,
  CLEAR_CAP: 90,
  LEVEL_TOLERANCE: 2,
  ALMOST_FREE_SECONDS: 10,
@@ -203,6 +203,9 @@
 
  const cumXP = (() => { const cum = [0]; for (let i = 0; i < DB.levels.length; i++) cum.push(cum[i] + (DB.levels[i]||0)); return cum; })();
  function expToNext(level, heroExp) { const inc = DB.levels[level-1] || 0; return Math.max(0, inc - (heroExp||0)); }
+ function partyExp(psd) { const hsm = heroSaveMap(psd); let t = 0; for (const k of party(psd)) { const h = hsm[k]; if (h) t += (cumXP[(h.HeroLevel||1)-1]||0) + (h.HeroExp||0); } return t; }
+ function aggVal(psd, type, sub) { const a = (psd.aggregateSaveDatas||[]).find(x => x.Type === type && x.SubKey === sub); return a ? a.Value : null; }
+ function totalClears(psd) { return aggVal(psd, 15, 0); }
  function levelInfo(heroSave, eps) {
  const L = heroSave.HeroLevel || 1;
  const need = expToNext(L, heroSave.HeroExp || 0);
@@ -220,9 +223,18 @@
  return iMax < 0 ? true : iS <= iMax + 1;
  }
  function clearTime(s, D) { return (s.totalHP / Math.max(1, D)) + PARAMS.T_WAVE * s.waves + PARAMS.T_FIXED; }
- function stageRates(s, D, goldMult, expMult) {
+ function fitFactor(partyLevel, stageLvl) {
+ return Math.min(1, Math.max(0.01, 1 / (1 + Math.exp((partyLevel - stageLvl - 9) * (2 / 3)))));
+ }
+ function farmBonuses(psd) {
+ const rc = runeContrib(psd);
+ return { goldMult: 1 + (rc.IncreaseGoldAmount || 0) / PARAMS.PERCENT_DIVISOR,
+ expMult: 1 + (rc.IncreaseExpAmount || 0) / PARAMS.PERCENT_DIVISOR };
+ }
+ function stageRates(s, D, goldMult, expMult, fit) {
  const t = clearTime(s, D);
- return { clearTime: t, goldPerSec: s.gold * (goldMult||1) / t, expPerSec: s.exp * (expMult||1) / t };
+ fit = fit == null ? 1 : fit;
+ return { clearTime: t, fit, goldPerSec: s.gold * (goldMult || 1) / t, expPerSec: s.exp * fit * (expMult || 1) / t };
  }
 
  function clearable(s, D, maxLvl) {
@@ -231,29 +243,39 @@
 
  function bestFarm(psd, D, opts) {
  opts = opts || {};
- const goldMult = opts.goldMult || 1, expMult = opts.expMult || 1;
+ const stat = farmBonuses(psd);
+ const partyLevel = maxPartyLevel(psd);
  const maxC = psd.commonSaveData.maxCompletedStage, curKey = String(psd.commonSaveData.currentStageKey);
  const ord = DB.stageOrder, idxMax = ord.indexOf(Number(maxC));
  const idxOf = k => ord.indexOf(Number(k));
  const curStage = DB.stages[curKey];
 
- let Dcal = Math.max(1, D), calibrated = false;
- const mgps = opts.measuredGoldPerSec;
- if (mgps && mgps > 0 && curStage && curStage.gold > 0) {
+ let Dcal = Math.max(1, D), calibrated = false, calSource = 'model';
+ let goldMult = stat.goldMult, expMult = stat.expMult;
+ const mgps = opts.measuredGoldPerSec, meps = opts.measuredExpPerSec, mcs = opts.measuredClearSec;
+ const overhead = curStage ? PARAMS.T_WAVE * curStage.waves + PARAMS.T_FIXED : 0;
+ const anchorBonus = clearT => {
+ if (mgps > 0 && curStage.gold > 0) goldMult = (mgps * clearT) / curStage.gold;
+ if (meps > 0 && curStage.exp > 0) { const cf = Math.max(0.01, fitFactor(partyLevel, curStage.lvl)); expMult = (meps * clearT) / (curStage.exp * cf); }
+ };
+ if (mcs && curStage && curStage.totalHP > 0 && mcs > overhead) {
+ Dcal = curStage.totalHP / Math.max(0.5, mcs - overhead);
+ anchorBonus(mcs); calibrated = true; calSource = 'clears';
+ } else if (mgps && mgps > 0 && curStage && curStage.gold > 0) {
  const measuredClearTime = (curStage.gold * goldMult) / mgps;
- const overhead = PARAMS.T_WAVE * curStage.waves + PARAMS.T_FIXED;
- const combat = measuredClearTime - overhead;
- Dcal = combat > 0.1 ? (curStage.totalHP / combat) : (curStage.totalHP / 0.1);
- calibrated = true;
+ Dcal = curStage.totalHP / Math.max(0.1, measuredClearTime - overhead);
+ if (meps > 0 && curStage.exp > 0) { const cf = Math.max(0.01, fitFactor(partyLevel, curStage.lvl)); expMult = (meps * measuredClearTime) / (curStage.exp * cf); }
+ calibrated = true; calSource = 'rate';
  }
  const rows = [];
  for (const [key, s] of Object.entries(DB.stages)) {
  const iS = idxOf(key);
  const unlocked = iS >= 0 && (idxMax < 0 || iS <= idxMax + 1);
  if (!unlocked) continue;
- const r = stageRates(s, Dcal, goldMult, expMult);
+ const fit = fitFactor(partyLevel, s.lvl);
+ const r = stageRates(s, Dcal, goldMult, expMult, fit);
  rows.push({ key, label: s.label, lvl: s.lvl, diff: s.diff, idx: iS, gold: s.gold, exp: s.exp,
- goldPerSec: r.goldPerSec, expPerSec: r.expPerSec, clearTime: r.clearTime,
+ goldPerSec: r.goldPerSec, expPerSec: r.expPerSec, clearTime: r.clearTime, fit: r.fit,
  goldPerHour: r.goldPerSec * 3600, expPerHour: r.expPerSec * 3600,
  expDensity: s.totalHP ? s.exp / s.totalHP : 0, goldDensity: s.totalHP ? s.gold / s.totalHP : 0,
  totalHP: s.totalHP, waves: s.waves,
@@ -271,7 +293,8 @@
  const bestExp = pool.slice().sort((a, b) => b.expPerSec - a.expPerSec)[0] || null;
  const recommend = bestGold;
  const onBest = !!(current && recommend && recommend.key === current.key);
- return { current, recommend, frontier, push, onBest, calibrated, Dcal,
+ return { current, recommend, frontier, push, onBest, calibrated, calSource, Dcal, partyLevel,
+ goldBonusPct: Math.round((goldMult - 1) * 100), expBonusPct: Math.round((expMult - 1) * 100),
  goldOptimal: bestGold, expOptimal: bestExp, bestGold, bestExp, all: rows };
  }
 
@@ -631,7 +654,7 @@
  const D = heroes.reduce((a, h) => a + h.dps, 0);
  const partySkillDps = heroes.reduce((a, h) => a + (h.skillDpsEst || 0), 0);
  const partyEHP = heroes.length ? Math.min(...heroes.map(h => h.ehp)) : 0;
- const farm = bestFarm(psd, D, { goldMult: opts.goldMult, expMult: opts.expMult, heroes, measuredGoldPerSec: opts.goldPerSec });
+ const farm = bestFarm(psd, D, { heroes, measuredGoldPerSec: opts.goldPerSec, measuredExpPerSec: opts.expPerSec, measuredClearSec: opts.clearSec });
  const epsCur = farm.current ? farm.current.expPerSec : (farm.bestExp ? farm.bestExp.expPerSec : 0);
  const gpsCur = farm.current ? farm.current.goldPerSec : (farm.bestGold ? farm.bestGold.goldPerSec : 0);
  const level = party(psd).map(hk => levelInfo(hsm[hk], epsCur));
@@ -695,7 +718,7 @@
  bestFarm, idleInfo, levelInfo, survival, stageDanger, partyComp, enchantAdvisor, apAdvisor,
  xpForecast, petAdvisor, alchemyValue, gearProgression, runeROI, goldPlan, goalPlan, synthesisPlan, forecast,
  collect, aggregate, dps, ehp, power, mitigation,
- runeContrib, gold, party, heroSaveMap, gearStatLines, expToNext, cumXP, ticksToUnix, stageUnlocked,
+ runeContrib, gold, party, heroSaveMap, gearStatLines, expToNext, partyExp, totalClears, cumXP, ticksToUnix, stageUnlocked,
  bestParkStage, refStageLevel, refDamage };
  g.TBHEngine = API;
  if (typeof module !== 'undefined' && module.exports) module.exports = API;
