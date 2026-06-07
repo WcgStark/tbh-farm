@@ -1,0 +1,131 @@
+
+
+const fs = require('fs');
+const path = require('path');
+const E = require('./engine.js');
+
+const snap = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'runtime', 'save_snapshot.json'), 'utf8'));
+const psd = E.parseSave(snap.PlayerSaveData.value);
+
+let pass = 0, fail = 0;
+const approx = (got, want, tolPct, label) => {
+ const ok = Math.abs(got - want) <= Math.abs(want) * tolPct / 100;
+ console.log(`${ok ? 'PASS' : 'FAIL'} ${label}: got ${round(got)} want ~${round(want)} (±${tolPct}%)`);
+ ok ? pass++ : fail++;
+};
+const eq = (got, want, label) => {
+ const ok = got === want;
+ console.log(`${ok ? 'PASS' : 'FAIL'} ${label}: got ${JSON.stringify(got)} want ${JSON.stringify(want)}`);
+ ok ? pass++ : fail++;
+};
+const ok = (cond, label) => { console.log(`${cond ? 'PASS' : 'FAIL'} ${label}`); cond ? pass++ : fail++; };
+const round = n => (typeof n === 'number' ? Math.round(n * 100) / 100 : n);
+
+console.log('=== TBH engine validation vs live save ===\n');
+const r = E.recommend(psd, { elapsedSec: 0 });
+
+const byHero = Object.fromEntries(r.heroes.map(h => [h.heroKey, h]));
+console.log('-- power (POWER uses the corrected stage-dependent armor formula @ stage level 18) --');
+approx(byHero[201].power, 171, 10, 'Ranger 201 POWER');
+approx(byHero[401].power, 236, 10, 'Priest 401 POWER');
+approx(byHero[301].power, 148, 10, 'Sorcerer 301 POWER');
+approx(r.meta.partyDPS, 295, 10, 'party DPS');
+eq(r.meta.carryHero, 201, 'damage carry = Ranger 201');
+ok(r.meta.carryShare > 0.4, 'carry share > 40% (Ranger is the plurality carry; correct crit ends the old fake monopoly)');
+approx(byHero[201].stats.AttackSpeed, 226, 5, 'Ranger AttackSpeed (raw)');
+
+ok(byHero[201].stats.CriticalChance / 1000 < 1, 'Ranger crit is a sane fraction, not capped at 100%');
+ok(Math.abs(byHero[201].stats.CriticalChance / 1000 - 0.0624) < 0.01, 'Ranger crit ~6.2% (raw 62.4 6.24%)');
+
+console.log('\n-- leveling --');
+const byLvl = Object.fromEntries(r.level.map(l => [l.heroKey, l]));
+eq(byLvl[201].expToNext, 778340, '201 XP to next');
+eq(byLvl[401].expToNext, 1205227, '401 XP to next');
+eq(byLvl[301].expToNext, 1201128, '301 XP to next');
+ok(byLvl[201].cap === 100, 'level cap 100');
+
+console.log('\n-- idle --');
+ok(r.idle.unlocked, 'offline unlocked (rune 11001)');
+eq(r.idle.stageLevel, 18, 'parked stage level 18');
+eq(r.idle.fullGold, 22400, 'full-window gold');
+eq(r.idle.fullExp, 248640, 'full-window exp');
+ok(r.idle.bestPark != null, 'best park stage computed');
+
+console.log('\n-- runes --');
+const afKeys = r.runes.almostFree.map(x => x.key);
+ok([110011, 110012, 10, 11].every(k => afKeys.includes(k)), 'almost-free includes 110011,110012,10,11');
+ok(r.runes.almostFree.every(x => x.cost <= r.runes.afThreshold), 'all almost-free within threshold');
+ok(r.runes.firstDpsPath && r.runes.firstDpsPath.target === 405, 'first DPS path targets rune 405');
+approx(r.runes.firstDpsPath.totalCost, 42000, 5, 'path-cost to 405');
+const r405 = r.runes.firstDpsPath.steps.find(x => x.key === 405);
+ok(r405 && r405.st === 'AllHeroAttackDamagePercent' && r405.value === 20, 'rune 405 = +20% AllHeroAttackDamage');
+
+console.log('\n-- gear --');
+eq(r.gear.swaps.length, 0, 'no worthwhile gear swaps');
+eq(r.gear.emptyJewelry.length, 12, 'empty jewelry slots (4/hero × 3)');
+const rangerWeapon = r.gear.slots.find(s => s.heroKey === 201 && s.slot === 0);
+ok(rangerWeapon && rangerWeapon.current && rangerWeapon.current.gearType === 'BOW', 'Ranger main weapon is a BOW');
+
+console.log('\n-- farm (forward-only) --');
+const curStage = E.DB.stages[r.meta.currentStage];
+ok(r.farm.recommend, 'farm recommendation exists');
+ok(!r.farm.current || r.farm.recommend.idx >= r.farm.current.idx, 'recommendation is not below current stage');
+ok(!r.farm.push || (r.farm.frontier && r.farm.push.idx === r.farm.frontier.idx), 'push is the next stage to clear (the frontier)');
+ok(r.farm.frontier && r.farm.frontier.idx >= (r.farm.current ? r.farm.current.idx : 0), 'frontier ≥ current');
+
+console.log('\n-- rune tree --');
+const rt = r.runeTree;
+ok(rt && Object.keys(rt.nodes).length === 197, `tree has 197 nodes (got ${rt && Object.keys(rt.nodes).length})`);
+ok(rt.bounds && rt.edges && rt.edges.length > 100, 'tree has bounds + edges');
+const statuses = {};
+for (const n of Object.values(rt.nodes)) statuses[n.status] = (statuses[n.status] || 0) + 1;
+console.log(' status histogram:', JSON.stringify(statuses));
+ok(Object.values(rt.nodes).some(n => n.status === 'owned'), 'some nodes owned');
+ok(Object.values(rt.nodes).some(n => n.status === 'locked'), 'some nodes locked');
+ok(Object.values(rt.nodes).every(n => typeof n.x === 'number' && typeof n.y === 'number'), 'every node has x/y coords');
+ok(Object.values(rt.nodes).some(n => n.cat === 'combat') && Object.values(rt.nodes).some(n => n.cat === 'gold'), 'categories assigned');
+
+console.log('\n-- party comp + survival --');
+ok(r.partyComp && r.partyComp.hasFront === true, 'Priest counts as the front-line (heals/sustains)');
+eq(r.partyComp.recommendTank, null, 'no tank pushed when a Priest already fronts the party');
+ok(r.partyComp.roles.length === 6, 'all 6 heroes classified');
+ok(r.partyComp.roles.find(x => x.heroKey === 101).role === 'tank', 'Knight classified as tank');
+ok(!r.actions.some(a => a.k === 'party_tank'), 'no tank recommendation when the Priest fronts the party');
+ok(r.survival && r.survival.stageKey && typeof r.survival.margin === 'number', 'survival sim computed for push stage');
+ok(['comfortable','tight','risky'].includes(r.survival.rating), 'survival rating valid');
+ok(E.DB.stageThreat['1206'] && E.DB.stageThreat['1206'].hit > 0, 'stage threat data present');
+
+ok(r.enchant && r.enchant.totalOpen > 30, `enchant advisor finds open affix slots (got ${r.enchant && r.enchant.totalOpen})`);
+ok(r.enchant.perHero.every(h => h.open > 0 && h.stat && typeof h.dPower === 'number'), 'per-hero enchant has open slots + stat + ΔPOWER');
+ok(r.actions.some(a => a.k === 'gear_enchant'), 'gear_enchant action present');
+
+ok(r.ap && r.ap.length === 3 && r.ap.every(a => a.ap === 1 && a.best), 'AP advisor recommends a node for each hero with unspent AP');
+
+const rs = psd.heroSaveDatas.find(h => h.heroKey === 201);
+const st201 = E.heroStats(rs, psd, null, 18).stats;
+ok(E.mitigation(st201.Armor, 50, 300) < E.mitigation(st201.Armor, 18, 0), 'armor mitigation drops at higher stage + incoming damage');
+
+console.log('\n-- economy + planners --');
+ok(r.alchemy && r.alchemy.sellGold > 0, `alchemy value of loose gear (got ${r.alchemy && r.alchemy.sellGold}g)`);
+ok(r.gearProgression && r.gearProgression.gap > 0 && r.gearProgression.advice === 'push_for_drops', 'gear is below frontier push for drops');
+ok(r.pets && r.pets.unlocked.length > 0 && r.pets.bestGold, 'pet advisor finds unlocked pets + best for gold');
+ok(r.runeROI && r.runeROI.length > 0 && r.runeROI[0].perGold > 0, 'rune ROI ranking present');
+ok(r.goldPlan && Array.isArray(r.goldPlan.cart), 'gold-spend cart computed');
+ok(r.goal && typeof r.goal.levelGap === 'number' && r.goal.rating, 'reverse goal planner for push stage');
+ok(Array.isArray(r.synthesis), 'synthesis plan computed');
+const xp201 = r.xpForecast.find(x => x.heroKey === 201);
+ok(xp201 && xp201.targets.find(t => t.level === 100) && xp201.targets.find(t => t.level === 100).xp > 1e9, 'XP forecast to L100 (~40B XP)');
+ok(r.forecast && Array.isArray(r.forecast.nextLevel), 'forecast/timeline computed');
+
+ok(r.heroes.every(h => typeof h.skillDpsEst === 'number'), 'per-hero skill-DPS estimate present');
+ok(byHero[201].skillDpsEst < byHero[201].dps, 'skill-DPS is a minor add vs the carry auto-attack (kept separate)');
+ok(typeof r.meta.partySkillDps === 'number', 'party skill-DPS total in meta');
+
+console.log('\n-- power delta (gear) --');
+const rangerSave = psd.heroSaveDatas.find(h => h.heroKey === 201);
+const d = E.powerDelta(rangerSave, psd, 0, 314141);
+ok(d.dPower > 1000, `swapping Ranger bow->314141 raises POWER by ${round(d.dPower)} (>1000)`);
+ok(Math.abs(d.dEhp) < 1, 'pure weapon swap leaves EHP unchanged');
+
+console.log(`\n=== ${pass} passed, ${fail} failed ===`);
+process.exit(fail ? 1 : 0);

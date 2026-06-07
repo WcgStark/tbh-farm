@@ -1,0 +1,26 @@
+# ── personal data — NEVER publish ──────────────────────────────────────────
+# your decrypted save snapshot, live monitor state/log, scratch analysis scripts
+/runtime/
+
+# ── large regenerable mirrors (game IP; keep the repo lean) ─────────────────
+# full decompiled game DB (~13 MB). The trimmed engine/gamedata.js bundle IS committed,
+# so the app runs without this. Rebuild with: curl the wiki /data/*.json into data/wiki/
+/data/wiki/
+# raw wiki page dumps used only for research
+/wiki_*.html
+/wiki_sitemap.xml
+
+# ── tooling / temp ──────────────────────────────────────────────────────────
+/.gstack/
+.tmp*
+*.tmp.js
+*.output
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# ── internal dev docs — kept local, NOT published (root README.md is the exception) ──
+/docs/
+/monitor/README.md
+.gstack/
