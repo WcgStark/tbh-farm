@@ -39,7 +39,7 @@
  }
 
  const gold = psd => { const c = (psd.currenySaveDatas||[]).find(x => x.Key === GOLD_KEY); return c ? c.Quantity : 0; };
- const party = psd => (psd.commonSaveData||{}).arrangedHeroKey || [];
+ const party = psd => ((psd.commonSaveData||{}).arrangedHeroKey || []).filter(k => k != null && Number(k) > 0);
  const heroSaveMap = psd => Object.fromEntries((psd.heroSaveDatas||[]).map(h => [h.heroKey, h]));
  const itemSaveMap = psd => Object.fromEntries((psd.itemSaveDatas||[]).map(it => [it.UniqueId, it]));
  const maxPartyLevel = psd => { const m = heroSaveMap(psd); return Math.max(1, ...party(psd).map(k => (m[k]||{}).HeroLevel||1)); };
@@ -669,7 +669,7 @@
  opts = opts || {};
  const rstats = runeContrib(psd), hsm = heroSaveMap(psd);
  const refSL = refStageLevel(psd);
- const heroes = party(psd).map(hk => heroStats(hsm[hk], psd, rstats, refSL)).filter(Boolean);
+ const heroes = party(psd).map(hk => hsm[hk] ? heroStats(hsm[hk], psd, rstats, refSL) : null).filter(Boolean);
  const D = heroes.reduce((a, h) => a + h.dps, 0);
  const partySkillDps = heroes.reduce((a, h) => a + (h.skillDpsEst || 0), 0);
  const partyEHP = heroes.length ? Math.min(...heroes.map(h => h.ehp)) : 0;
