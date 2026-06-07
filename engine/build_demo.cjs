@@ -4,9 +4,9 @@ const E = require('./engine.js'), fs = require('path').join, p = require('path')
 const path = p.join(__dirname, '..', 'runtime', 'save_snapshot.json');
 const snap = JSON.parse(require('fs').readFileSync(path, 'utf8'));
 const psd = E.parseSave(snap.PlayerSaveData.value);
-const gps = 7;
+const gps = 50;
 const _cur = E.DB.stages[String(psd.commonSaveData.currentStageKey)];
-const eps = _cur ? gps * (_cur.exp / _cur.gold) : undefined;
+const eps = _cur ? 3 * gps * (_cur.exp / _cur.gold) : undefined;
 const rec = E.recommend(psd, { goldPerSec: gps, expPerSec: eps, elapsedSec: 0 });
 const c = psd.commonSaveData;
 const meta = { gold: E.gold(psd), goldPerHour: Math.round(gps * 3600), playTimeH: +(c.playTime / 3600).toFixed(1), version: c.version };

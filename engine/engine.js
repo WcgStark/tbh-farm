@@ -231,8 +231,18 @@
  return { goldMult: 1 + (rc.IncreaseGoldAmount || 0) / PARAMS.PERCENT_DIVISOR,
  expMult: 1 + (rc.IncreaseExpAmount || 0) / PARAMS.PERCENT_DIVISOR };
  }
- function stageRates(s, D, goldMult, expMult, fit) {
- const t = clearTime(s, D);
+ function fitClearModel(samples) {
+ const pts = (samples || []).filter(s => s && s.clearSec > 0 && s.hp > 0 && s.waves > 0);
+ if (pts.length < 2) return null;
+ let Sww = 0, Swh = 0, Shh = 0, Swy = 0, Shy = 0;
+ for (const s of pts) { const w = s.waves, h = s.hp, y = s.clearSec - PARAMS.T_FIXED; Sww += w*w; Swh += w*h; Shh += h*h; Swy += w*y; Shy += h*y; }
+ const det = Sww * Shh - Swh * Swh;
+ if (Math.abs(det) < 1e-9) return null;
+ const tWave = (Swy * Shh - Shy * Swh) / det, invD = (Sww * Shy - Swh * Swy) / det;
+ if (!(invD > 1e-12) || !(tWave >= 0)) return null;
+ return { tWave, D: 1 / invD, n: pts.length };
+ }
+ function stageRates(s, t, goldMult, expMult, fit) {
  fit = fit == null ? 1 : fit;
  return { clearTime: t, fit, goldPerSec: s.gold * (goldMult || 1) / t, expPerSec: s.exp * fit * (expMult || 1) / t };
  }
@@ -245,27 +255,30 @@
  opts = opts || {};
  const stat = farmBonuses(psd);
  const partyLevel = maxPartyLevel(psd);
+ const partySize = Math.max(1, party(psd).length);
  const maxC = psd.commonSaveData.maxCompletedStage, curKey = String(psd.commonSaveData.currentStageKey);
  const ord = DB.stageOrder, idxMax = ord.indexOf(Number(maxC));
  const idxOf = k => ord.indexOf(Number(k));
  const curStage = DB.stages[curKey];
 
- let Dcal = Math.max(1, D), calibrated = false, calSource = 'model';
+ let Dcal = Math.max(1, D), tWave = PARAMS.T_WAVE, calibrated = false, calSource = 'model';
  let goldMult = stat.goldMult, expMult = stat.expMult;
  const mgps = opts.measuredGoldPerSec, meps = opts.measuredExpPerSec, mcs = opts.measuredClearSec;
- const overhead = curStage ? PARAMS.T_WAVE * curStage.waves + PARAMS.T_FIXED : 0;
- const anchorBonus = clearT => {
- if (mgps > 0 && curStage.gold > 0) goldMult = (mgps * clearT) / curStage.gold;
- if (meps > 0 && curStage.exp > 0) { const cf = Math.max(0.01, fitFactor(partyLevel, curStage.lvl)); expMult = (meps * clearT) / (curStage.exp * cf); }
- };
- if (mcs && curStage && curStage.totalHP > 0 && mcs > overhead) {
- Dcal = curStage.totalHP / Math.max(0.5, mcs - overhead);
- anchorBonus(mcs); calibrated = true; calSource = 'clears';
+ const fitM = fitClearModel(opts.clearSamples);
+ const ovh = w => tWave * w + PARAMS.T_FIXED;
+ if (fitM) {
+ tWave = fitM.tWave; Dcal = fitM.D; calibrated = true; calSource = 'fit';
+ } else if (mcs && curStage && curStage.totalHP > 0 && mcs > ovh(curStage.waves)) {
+ Dcal = curStage.totalHP / Math.max(0.5, mcs - ovh(curStage.waves)); calibrated = true; calSource = 'clears';
  } else if (mgps && mgps > 0 && curStage && curStage.gold > 0) {
- const measuredClearTime = (curStage.gold * goldMult) / mgps;
- Dcal = curStage.totalHP / Math.max(0.1, measuredClearTime - overhead);
- if (meps > 0 && curStage.exp > 0) { const cf = Math.max(0.01, fitFactor(partyLevel, curStage.lvl)); expMult = (meps * measuredClearTime) / (curStage.exp * cf); }
- calibrated = true; calSource = 'rate';
+ const mct = (curStage.gold * goldMult) / mgps;
+ Dcal = curStage.totalHP / Math.max(0.1, mct - ovh(curStage.waves)); calibrated = true; calSource = 'rate';
+ }
+ const ct = s => PARAMS.T_FIXED + tWave * s.waves + s.totalHP / Dcal;
+ if (calibrated && curStage) {
+ const cc = ct(curStage);
+ if (mgps > 0 && curStage.gold > 0) goldMult = (mgps * cc) / curStage.gold;
+ if (meps > 0 && curStage.exp > 0) { const cf = Math.max(0.01, fitFactor(partyLevel, curStage.lvl)); expMult = (meps / partySize * cc) / (curStage.exp * cf); }
  }
  const rows = [];
  for (const [key, s] of Object.entries(DB.stages)) {
@@ -273,7 +286,7 @@
  const unlocked = iS >= 0 && (idxMax < 0 || iS <= idxMax + 1);
  if (!unlocked) continue;
  const fit = fitFactor(partyLevel, s.lvl);
- const r = stageRates(s, Dcal, goldMult, expMult, fit);
+ const r = stageRates(s, ct(s), goldMult, expMult, fit);
  rows.push({ key, label: s.label, lvl: s.lvl, diff: s.diff, idx: iS, gold: s.gold, exp: s.exp,
  goldPerSec: r.goldPerSec, expPerSec: r.expPerSec, clearTime: r.clearTime, fit: r.fit,
  goldPerHour: r.goldPerSec * 3600, expPerHour: r.expPerSec * 3600,
@@ -293,7 +306,8 @@
  const bestExp = pool.slice().sort((a, b) => b.expPerSec - a.expPerSec)[0] || null;
  const recommend = bestGold;
  const onBest = !!(current && recommend && recommend.key === current.key);
- return { current, recommend, frontier, push, onBest, calibrated, calSource, Dcal, partyLevel,
+ const stagesMeasured = fitM ? fitM.n : (calSource === 'clears' ? 1 : 0);
+ return { current, recommend, frontier, push, onBest, calibrated, calSource, Dcal, tWave, partyLevel, stagesMeasured,
  goldBonusPct: Math.round((goldMult - 1) * 100), expBonusPct: Math.round((expMult - 1) * 100),
  goldOptimal: bestGold, expOptimal: bestExp, bestGold, bestExp, all: rows };
  }
@@ -654,7 +668,7 @@
  const D = heroes.reduce((a, h) => a + h.dps, 0);
  const partySkillDps = heroes.reduce((a, h) => a + (h.skillDpsEst || 0), 0);
  const partyEHP = heroes.length ? Math.min(...heroes.map(h => h.ehp)) : 0;
- const farm = bestFarm(psd, D, { heroes, measuredGoldPerSec: opts.goldPerSec, measuredExpPerSec: opts.expPerSec, measuredClearSec: opts.clearSec });
+ const farm = bestFarm(psd, D, { heroes, measuredGoldPerSec: opts.goldPerSec, measuredExpPerSec: opts.expPerSec, measuredClearSec: opts.clearSec, clearSamples: opts.clearSamples });
  const epsCur = farm.current ? farm.current.expPerSec : (farm.bestExp ? farm.bestExp.expPerSec : 0);
  const gpsCur = farm.current ? farm.current.goldPerSec : (farm.bestGold ? farm.bestGold.goldPerSec : 0);
  const level = party(psd).map(hk => levelInfo(hsm[hk], epsCur));

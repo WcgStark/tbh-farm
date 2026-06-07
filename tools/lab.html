@@ -200,10 +200,7 @@ function renderDrops(){
  if(!REC)return;
  const gp=REC.gearProgression||{};
  const adv={push_for_drops:'Empurre pra estágios mais altos — seu gear está atrás da fronteira.',on_track:'Seu gear acompanha os estágios.',ahead:'Gear à frente; foque runas/atributos.'}[gp.advice]||gp.advice||'';
- const w=REC.farm&&REC.farm.wall, pn=w&&w.powerNeeded;
- const wallHtml=pn?(`<div class="row" style="background:#1a1320;border-radius:7px;padding:8px"><span class="l"> Próximo mapa que você NÃO sustenta</span><span class="v">[${w.label}] nv ${w.lvl}</span></div>`+
- `<div class="row"><span class="l">POWER necessário (estimado)</span><span class="v">~${pn.powerMult.toFixed(1)}× · ${fmt(pn.partyPower)} <span style="color:var(--pow)">${fmt(pn.targetPower)}</span></span></div>`):'';
- $('dropProg').innerHTML=wallHtml+(gp.avgItemLevel!=null?(
+ $('dropProg').innerHTML=(gp.avgItemLevel!=null?(
  `<div class="row"><span class="l">Nível médio do seu gear</span><span class="v">${gp.avgItemLevel}</span></div>`+
  `<div class="row"><span class="l">Fronteira (maior estágio aberto)</span><span class="v">nv ${gp.frontierLevel}</span></div>`+
  `<div class="row"><span class="l">Gap</span><span class="v" style="color:${gp.gap>0?'var(--warn)':'var(--good)'}">${gp.gap>0?('+'+gp.gap+' níveis atrás'):'em dia'}</span></div>`+
