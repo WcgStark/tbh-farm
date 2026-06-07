@@ -118,6 +118,14 @@ select.lang{font-family:var(--mono);font-size:11px;color:var(--ink);background:#
 .ftable th:first-child{text-align:left}
 .ftable td{text-align:right;padding:5px 6px;border-bottom:1px solid #141a28;font-variant-numeric:tabular-nums;color:var(--mut)}
 .fdiff{font-family:var(--px);font-size:7px;letter-spacing:.3px;padding:1px 4px;border-radius:4px;border:1px solid currentColor;opacity:.9}
+.fcal-edit{margin-top:10px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#0c1018}
+.fce-h{font-family:var(--px);font-size:8px;letter-spacing:.5px;color:var(--exp);margin-bottom:7px}
+.fce-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.fce-row select,.fce-row input{background:#0a0e16;border:1px solid var(--line2);color:var(--ink);border-radius:6px;padding:5px 7px;font-family:var(--mono);font-size:11px}
+.fcal-list{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.fcal-chip{font-size:10px;color:var(--mut);background:#0a0e16;border:1px solid var(--line2);border-radius:5px;padding:2px 4px 2px 7px}
+.fcal-chip b{color:var(--bad);cursor:pointer;margin-left:6px;font-weight:700}
+.fce-hint{font-size:10.5px;color:var(--dim);margin-top:7px;line-height:1.4}
 .ftable td.fs-st{text-align:left;color:var(--ink);font-weight:700}.ftable td.fs-st small{color:var(--mut);font-weight:400}
 .ftable td.fs-g{color:var(--gold)}.ftable td.fs-x{color:var(--exp)}
 .ftable tr.cur td{background:#0e1320}.ftable tr.cur td.fs-st{box-shadow:inset 2px 0 0 var(--good)}
@@ -202,7 +210,7 @@ select.lang{font-family:var(--mono);font-size:11px;color:var(--ink);background:#
 .cart{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);margin-bottom:6px}
 .cart .ci{font-family:var(--px);font-size:10px;color:var(--gold);min-width:18px}.cart .cn{flex:1}.cart .cc{color:var(--gold);font-weight:700}
 .spark{width:100%;height:90px;display:block}
-</style></head><body><div class="wrap" id="stage"><div class="top"><div class="logo">TBH <b>CO·PILOT</b></div><div class="live"><span class="dot" id="dot"></span><span id="connTxt">—</span></div><div class="sp"></div><select class="lang" id="lang"></select><div class="chip" id="ptime">—</div><div class="chip" id="ver">v—</div></div><div class="banner" id="banner"></div><div class="strip"><div class="s-gold"><div class="lbl"><span id="lblGold">GOLD</span></div><div class="num" id="gold">0</div><div class="sub"><b id="ghr">—</b><span id="lblPerH">/h</span> · <span id="curStage">—</span></div></div><div class="s-stat"><div class="k" id="lblPow">POWER</div><div class="v pow" id="partyPow">—</div><div class="sm" id="partyDps">—</div></div></div><div class="tabs" id="tabs"></div><div class="pane" id="pane-overview"><div id="ovHeroes"></div><div class="grid2"><div class="panel"><div class="ptitle" id="tDoNow">DO NOW</div><div id="doNow"></div></div><div class="panel"><div class="ptitle" style="--c:var(--good)" id="tSummary">SUMMARY</div><div id="ovSummary"></div></div></div></div><div class="pane" id="pane-farm"><div class="grid2"><div class="panel"><div class="ptitle" style="--c:var(--exp)" id="tFarm2">FARM</div><div id="farm"></div></div><div class="panel"><div class="ptitle" style="--c:var(--warn)" id="tIdle2">IDLE</div><div id="idle"></div></div></div></div><div class="pane" id="pane-runes"><div class="panel"><div class="ptitle" style="--c:var(--pow)" id="tRunes2">RUNES</div><div class="treewrap"><svg id="tree" preserveAspectRatio="xMidYMid meet"></svg><div class="tctl"><button id="tFit">fit</button><button id="tIn">+</button><button id="tOut">−</button></div><div class="thint" id="thint"></div><div class="tdetail" id="tdetail"></div></div><div class="legend" id="legend"></div></div><div class="panel"><div class="ptitle" style="--c:var(--gold)" id="tReco">RECOMENDAR</div><div class="catbtns" id="catBtns"></div><div id="recoList"></div></div></div><div class="pane" id="pane-whatif"><div class="panel"><div class="ptitle" style="--c:#9db4ff" id="tGear">GEAR</div><div class="wf-controls"><span class="sub" id="wfHeroLbl">hero</span><select id="wfHero"></select><span class="sub" id="wfHint">—</span></div><div class="slotbar" id="wfSlots"></div><div id="wfCands"></div></div></div><div class="pane" id="pane-hist"><div class="panel"><div class="ptitle" style="--c:var(--pow)">HISTÓRICO · POWER</div><svg class="spark" id="sparkPow" preserveAspectRatio="none"></svg><div id="histPow" class="sub"></div></div><div class="panel"><div class="ptitle" style="--c:var(--gold)">HISTÓRICO · GOLD</div><svg class="spark" id="sparkGold" preserveAspectRatio="none"></svg><div id="histGold" class="sub"></div></div><div class="note">O histórico acumula a cada leitura do save (guardado local no navegador). Deixe aberto enquanto joga.</div></div><div class="foot" id="foot">100% local</div></div><div class="gate" id="gate"><div class="gcard"><div class="glogo">TBH <b>CO·PILOT</b></div><p id="gateMsg">—</p><button class="btn" id="connectBtn"> CONNECT</button><button class="btn ghost" id="demoBtn">demo</button><div class="gerr" id="gerr"></div><div class="gnote">SaveFile_Live.es3 · AppData\LocalLow\TesseractStudio\TaskbarHero</div></div></div><div class="hsheet" id="hsheet"><div class="hs-card" id="hsCard"></div></div><script src="engine/gamedata.js?v=9"></script><script src="engine/i18n.js?v=9"></script><script src="engine/engine.js?v=9"></script><script src="engine/demo.js?v=9"></script><script>
+</style></head><body><div class="wrap" id="stage"><div class="top"><div class="logo">TBH <b>CO·PILOT</b></div><div class="live"><span class="dot" id="dot"></span><span id="connTxt">—</span></div><div class="sp"></div><select class="lang" id="lang"></select><div class="chip" id="ptime">—</div><div class="chip" id="ver">v—</div></div><div class="banner" id="banner"></div><div class="strip"><div class="s-gold"><div class="lbl"><span id="lblGold">GOLD</span></div><div class="num" id="gold">0</div><div class="sub"><b id="ghr">—</b><span id="lblPerH">/h</span> · <span id="curStage">—</span></div></div><div class="s-stat"><div class="k" id="lblPow">POWER</div><div class="v pow" id="partyPow">—</div><div class="sm" id="partyDps">—</div></div></div><div class="tabs" id="tabs"></div><div class="pane" id="pane-overview"><div id="ovHeroes"></div><div class="grid2"><div class="panel"><div class="ptitle" id="tDoNow">DO NOW</div><div id="doNow"></div></div><div class="panel"><div class="ptitle" style="--c:var(--good)" id="tSummary">SUMMARY</div><div id="ovSummary"></div></div></div></div><div class="pane" id="pane-farm"><div class="grid2"><div class="panel"><div class="ptitle" style="--c:var(--exp)" id="tFarm2">FARM</div><div id="farm"></div></div><div class="panel"><div class="ptitle" style="--c:var(--warn)" id="tIdle2">IDLE</div><div id="idle"></div></div></div></div><div class="pane" id="pane-runes"><div class="panel"><div class="ptitle" style="--c:var(--pow)" id="tRunes2">RUNES</div><div class="treewrap"><svg id="tree" preserveAspectRatio="xMidYMid meet"></svg><div class="tctl"><button id="tFit">fit</button><button id="tIn">+</button><button id="tOut">−</button></div><div class="thint" id="thint"></div><div class="tdetail" id="tdetail"></div></div><div class="legend" id="legend"></div></div><div class="panel"><div class="ptitle" style="--c:var(--gold)" id="tReco">RECOMENDAR</div><div class="catbtns" id="catBtns"></div><div id="recoList"></div></div></div><div class="pane" id="pane-whatif"><div class="panel"><div class="ptitle" style="--c:#9db4ff" id="tGear">GEAR</div><div class="wf-controls"><span class="sub" id="wfHeroLbl">hero</span><select id="wfHero"></select><span class="sub" id="wfHint">—</span></div><div class="slotbar" id="wfSlots"></div><div id="wfCands"></div></div></div><div class="pane" id="pane-hist"><div class="panel"><div class="ptitle" style="--c:var(--pow)">HISTÓRICO · POWER</div><svg class="spark" id="sparkPow" preserveAspectRatio="none"></svg><div id="histPow" class="sub"></div></div><div class="panel"><div class="ptitle" style="--c:var(--gold)">HISTÓRICO · GOLD</div><svg class="spark" id="sparkGold" preserveAspectRatio="none"></svg><div id="histGold" class="sub"></div></div><div class="note">O histórico acumula a cada leitura do save (guardado local no navegador). Deixe aberto enquanto joga.</div></div><div class="foot" id="foot">100% local</div></div><div class="gate" id="gate"><div class="gcard"><div class="glogo">TBH <b>CO·PILOT</b></div><p id="gateMsg">—</p><button class="btn" id="connectBtn"> CONNECT</button><button class="btn ghost" id="demoBtn">demo</button><div class="gerr" id="gerr"></div><div class="gnote">SaveFile_Live.es3 · AppData\LocalLow\TesseractStudio\TaskbarHero</div></div></div><div class="hsheet" id="hsheet"><div class="hs-card" id="hsCard"></div></div><script src="engine/gamedata.js?v=10"></script><script src="engine/i18n.js?v=10"></script><script src="engine/engine.js?v=10"></script><script src="engine/demo.js?v=10"></script><script>
 const PASSWORD='emuMqG3bLYJ938ZDCfieWJ';
 const $=id=>document.getElementById(id);
 const DB=window.TBH_DB,I18N=window.TBH_I18N,ENG=window.TBHEngine;
@@ -257,6 +265,14 @@ let samples=[],lastStage=null,clearStore={};try{clearStore=JSON.parse(localStora
 function sampleGold(pt,g,x,c){const l=samples[samples.length-1];if(!l||l.pt!==pt||l.g!==g)samples.push({pt,g,x,c});if(samples.length>400)samples.shift();}
 function rateOf(f){if(samples.length<2)return null;let gain=0,d=0;for(let i=1;i<samples.length;i++){const dp=samples[i].pt-samples[i-1].pt,dg=(samples[i][f]||0)-(samples[i-1][f]||0);if(dp>0){d+=dp;if(dg>0)gain+=dg;}}return d>0?gain/d:null;}
 function clearSec(){if(samples.length<2)return null;let dc=0,d=0;for(let i=1;i<samples.length;i++){const dp=samples[i].pt-samples[i-1].pt,dcl=(samples[i].c||0)-(samples[i-1].c||0);if(dp>0&&dcl>0){d+=dp;dc+=dcl;}}return dc>0?d/dc:null;}
+let MANUALCAL={};try{MANUALCAL=JSON.parse(localStorage.getItem('tbh_clearcal')||'{}')}catch(e){}
+let lastGps=null,lastEps=null,lastCs=null;
+function manualSamples(){return Object.entries(MANUALCAL).map(([k,sec])=>{const st=ENG.DB.stages[k];return st?{hp:st.totalHP,waves:st.waves,clearSec:+sec}:null;}).filter(Boolean);}
+function calSamples(){const m=manualSamples();return m.length>=2?m:Object.values(clearStore);}
+function manualOn(){return manualSamples().length>=2;}
+function parseClock(s){s=String(s||'').trim();if(/^\d+:\d{1,2}$/.test(s)){const p=s.split(':');return (+p[0])*60+(+p[1]);}const n=parseFloat(s);return isFinite(n)?n:null;}
+function fmtClock(sec){sec=Math.round(+sec);const m=Math.floor(sec/60),s=sec%60;return m?m+':'+String(s).padStart(2,'0'):sec+'s';}
+function recompute(){if(!PSD)return;const c=PSD.commonSaveData;const rec=ENG.recommend(PSD,{goldPerSec:lastGps!=null?lastGps:undefined,expPerSec:lastEps!=null?lastEps:undefined,clearSec:manualOn()?undefined:(lastCs!=null?lastCs:undefined),clearSamples:calSamples(),elapsedSec:0});rec.__pt=Math.round(c.playTime||0);render(rec,lastMeta||{});}
 function goldPerSec(){return rateOf('g');}
 function expPerSec(){return rateOf('x');}
 
@@ -419,8 +435,24 @@ function renderFarm(rec){
  h+=card('push',t('f_unlock'),f.push,rd);}
  if(f.calibrated===false)h+=`<div class="note">${t('f_calnone')}</div>`;
  h+=farmTable(rec,pt);
+ h+=calEditUI(rec);
  $('farm').innerHTML=h||'<div class="note">—</div>';
  document.querySelectorAll('.fsort').forEach(b=>b.onclick=()=>{farmSort=b.dataset.s;localStorage.setItem('tbh_farmsort',farmSort);if(lastRec)renderFarm(lastRec);});
+ wireCalEdit();
+}
+function calEditUI(rec){
+ if(demoMode||!PSD)return'';
+ const f=rec.farm,cleared=(f.all||[]).filter(r=>r.cleared).sort((a,b)=>a.lvl-b.lvl);
+ if(cleared.length<2)return'';
+ const cur=f.current?f.current.key:cleared[cleared.length-1].key;
+ const opts=cleared.map(r=>`<option value="${r.key}"${String(r.key)===String(cur)?' selected':''}>${r.label} ${t('d_'+String(r.diff||'normal').toLowerCase())} ${t('lv_short')}${r.lvl}</option>`).join('');
+ const list=Object.keys(MANUALCAL).map(k=>{const st=ENG.DB.stages[k];if(!st)return'';return `<span class="fcal-chip">${st.label} ${t('lv_short')}${st.lvl} · ${fmtClock(MANUALCAL[k])}<b data-k="${k}">×</b></span>`;}).join('');
+ return `<div class="fcal-edit"><div class="fce-h">${t('f_caledit')}</div><div class="fce-row"><select id="fcalStage">${opts}</select><input id="fcalTime" placeholder="${t('f_caltime')}" size="5"><button id="fcalAdd" class="fsort">${t('f_caladd')}</button></div>${list?`<div class="fcal-list">${list}</div>`:''}<div class="fce-hint">${t('f_calhint')}</div></div>`;
+}
+function wireCalEdit(){
+ const add=$('fcalAdd');if(!add)return;
+ add.onclick=()=>{const k=$('fcalStage').value,sec=parseClock($('fcalTime').value);if(k&&sec&&sec>0){MANUALCAL[k]=sec;try{localStorage.setItem('tbh_clearcal',JSON.stringify(MANUALCAL))}catch(e){}$('fcalTime').value='';recompute();}};
+ document.querySelectorAll('.fcal-chip b').forEach(x=>x.onclick=()=>{delete MANUALCAL[x.dataset.k];try{localStorage.setItem('tbh_clearcal',JSON.stringify(MANUALCAL))}catch(e){}recompute();});
 }
 function farmTable(rec,pt){
  const f=rec.farm,curLvl=f.current?f.current.lvl:0,cur=f.current?f.current.key:null;
@@ -430,7 +462,7 @@ function farmTable(rec,pt){
  all.sort((a,b)=>b[key]-a[key]);
  const fmtH=n=>n==null?'-':n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?Math.round(n/1e3)+'k':Math.round(n);
  const nm=f.stagesMeasured||0;
- const cal=f.calSource==='fit'?t('f_calfit',nm):f.calibrated?t('f_calone'):t('f_calnone');
+ const cal=manualOn()?t('f_calman',manualSamples().length):f.calSource==='fit'?t('f_calfit',nm):f.calibrated?t('f_calone'):t('f_calnone');
  const info=`<div class="fcal">${t('f_level')} <b>${f.partyLevel||'?'}</b> · EXP <b>+${f.expBonusPct||0}%</b> · Gold <b>+${f.goldBonusPct||0}%</b> · <span class="${f.calibrated?'ok':''}">${cal}</span></div>`;
  const head=info+`<div class="fsort-row"><button class="fsort ${farmSort==='exp'?'on':''}" data-s="exp">EXP/h</button><button class="fsort ${farmSort==='gold'?'on':''}" data-s="gold">GOLD/h</button></div>`;
  const fitcol=v=>v>=0.9?'var(--good)':v>=0.5?'var(--mut)':'var(--dim)';
@@ -582,8 +614,9 @@ async function readOnce(){try{
  sampleGold(Math.round(c.playTime),ENG.gold(psd),ENG.partyExp(psd),ENG.totalClears(psd));
  const gps=goldPerSec(),eps=expPerSec(),cs=clearSec();
  if(cs!=null){const sk=String(c.currentStageKey),st=ENG.DB.stages[sk];if(st&&cs>5&&cs<900){clearStore[sk]={hp:st.totalHP,waves:st.waves,clearSec:cs};try{localStorage.setItem('tbh_clearmodel',JSON.stringify(clearStore))}catch(e){}}}
- const rec=ENG.recommend(psd,{goldPerSec:gps!=null?gps:undefined,expPerSec:eps!=null?eps:undefined,clearSec:cs!=null?cs:undefined,clearSamples:Object.values(clearStore),elapsedSec:0});rec.__pt=Math.round(c.playTime||0);histPut(rec);
- render(rec,{gold:ENG.gold(psd),goldPerHour:gps!=null?Math.round(gps*3600):null,playTimeH:+(c.playTime/3600).toFixed(1),version:c.version});setLive(true);return true;
+ lastGps=gps;lastEps=eps;lastCs=cs;lastMeta={gold:ENG.gold(psd),goldPerHour:gps!=null?Math.round(gps*3600):null,playTimeH:+(c.playTime/3600).toFixed(1),version:c.version};
+ const rec=ENG.recommend(psd,{goldPerSec:gps!=null?gps:undefined,expPerSec:eps!=null?eps:undefined,clearSec:manualOn()?undefined:(cs!=null?cs:undefined),clearSamples:calSamples(),elapsedSec:0});rec.__pt=Math.round(c.playTime||0);histPut(rec);
+ render(rec,lastMeta);setLive(true);return true;
 }catch(e){if(e&&(e.name==='NotAllowedError'||e.name==='SecurityError')){setLive(false);openGate('reconnect');stopPoll();}
  else{$('banner').classList.add('show');$('banner').textContent=' '+t('decrypt_fail',String(e&&e.message||e));}return false;}}
 function stopPoll(){if(timer){clearTimeout(timer);timer=null;}}
