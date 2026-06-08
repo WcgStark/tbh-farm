@@ -226,6 +226,20 @@
  function fitFactor(partyLevel, stageLvl) {
  return Math.min(1, Math.max(0.01, 1 / (1 + Math.exp((partyLevel - stageLvl - 8) * (2 / 3)))));
  }
+ function projectLevel(startLevel, startExp, expPerSec, stageLvl, hours) {
+ if (!(expPerSec > 0)) return startLevel;
+ const f0 = fitFactor(startLevel, stageLvl) || 1e-6;
+ let L = startLevel, eil = startExp || 0, t = 0; const cap = hours * 3600;
+ while (t < cap) {
+ const rate = expPerSec * fitFactor(L, stageLvl) / f0;
+ if (!(rate > 0)) break;
+ const inc = DB.levels[L - 1]; if (!inc) break;
+ const tl = (inc - eil) / rate;
+ if (t + tl <= cap) { t += tl; L++; eil = 0; if (L > 200) break; }
+ else { eil += rate * (cap - t); t = cap; }
+ }
+ return L + (DB.levels[L - 1] ? eil / DB.levels[L - 1] : 0);
+ }
  function farmBonuses(psd) {
  const rc = runeContrib(psd);
  return { goldMult: 1 + (rc.IncreaseGoldAmount || 0) / PARAMS.PERCENT_DIVISOR,
@@ -743,7 +757,7 @@
  xpForecast, petAdvisor, alchemyValue, gearProgression, runeROI, goldPlan, goalPlan, synthesisPlan, forecast,
  collect, aggregate, dps, ehp, power, mitigation,
  runeContrib, gold, party, heroSaveMap, gearStatLines, expToNext, partyExp, totalClears, cumXP, ticksToUnix, stageUnlocked,
- bestParkStage, refStageLevel, refDamage };
+ bestParkStage, refStageLevel, refDamage, projectLevel, fitFactor };
  g.TBHEngine = API;
  if (typeof module !== 'undefined' && module.exports) module.exports = API;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
