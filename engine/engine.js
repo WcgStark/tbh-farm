@@ -251,10 +251,12 @@
  let Sww = 0, Swh = 0, Shh = 0, Swy = 0, Shy = 0;
  for (const s of pts) { const w = s.waves, h = s.hp, y = s.clearSec - PARAMS.T_FIXED; Sww += w*w; Swh += w*h; Shh += h*h; Swy += w*y; Shy += h*y; }
  const det = Sww * Shh - Swh * Swh;
- if (Math.abs(det) < 1e-9) return null;
+ if (Math.abs(det) > 1e-9) {
  const tWave = (Swy * Shh - Shy * Swh) / det, invD = (Sww * Shy - Swh * Swy) / det;
- if (!(invD > 1e-12) || !(tWave >= 0)) return null;
- return { tWave, D: 1 / invD, n: pts.length };
+ if (invD > 1e-12 && tWave >= 0) return { tWave, D: 1 / invD, n: pts.length };
+ }
+ if (Shh > 1e-9) { const invD0 = Shy / Shh; if (invD0 > 1e-12) return { tWave: 0, D: 1 / invD0, n: pts.length }; }
+ return null;
  }
  function stageRates(s, t, goldMult, expMult, fit) {
  fit = fit == null ? 1 : fit;
