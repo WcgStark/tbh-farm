@@ -66,10 +66,17 @@ eq(r.gear.emptyJewelry.length, 12, 'empty jewelry slots (4/hero × 3)');
 const rangerWeapon = r.gear.slots.find(s => s.heroKey === 201 && s.slot === 0);
 ok(rangerWeapon && rangerWeapon.current && rangerWeapon.current.gearType === 'BOW', 'Ranger main weapon is a BOW');
 
-console.log('\n-- farm (forward-only) --');
+console.log('\n-- farm (true best gold/sec) --');
 const curStage = E.DB.stages[r.meta.currentStage];
 ok(r.farm.recommend, 'farm recommendation exists');
-ok(!r.farm.current || r.farm.recommend.idx >= r.farm.current.idx, 'recommendation is not below current stage');
+{
+ const cleared = r.farm.all.filter(s => s.cleared || (r.farm.current && s.key === r.farm.current.key));
+ const maxG = Math.max(...cleared.map(s => s.goldPerSec));
+ const maxX = Math.max(...cleared.map(s => s.expPerSec));
+ ok(r.farm.bestGold && Math.abs(r.farm.bestGold.goldPerSec - maxG) < 1e-6, 'bestGold has the max gold/sec among cleared stages');
+ ok(r.farm.bestExp && Math.abs(r.farm.bestExp.expPerSec - maxX) < 1e-6, 'bestExp has the max exp/sec among cleared stages');
+ ok(r.farm.recommend.key === r.farm.bestGold.key, 'recommend == bestGold');
+}
 ok(!r.farm.push || (r.farm.frontier && r.farm.push.idx === r.farm.frontier.idx), 'push is the next stage to clear (the frontier)');
 ok(r.farm.frontier && r.farm.frontier.idx >= (r.farm.current ? r.farm.current.idx : 0), 'frontier ≥ current');
 

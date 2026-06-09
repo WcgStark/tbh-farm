@@ -314,8 +314,9 @@
  const frontier = rows.length ? rows[rows.length - 1] : null;
  const push = (frontier && (idxMax < 0 || frontier.idx > idxMax)) ? frontier : null;
 
- const minLvl = current ? current.lvl : 0;
- const farmable = rows.filter(r => (r.cleared && r.lvl >= minLvl) || (current && r.key === current.key));
+ // The true best farm spot is the highest gold/sec (or exp/sec) among every
+ // cleared stage — even a lower one. This matches the full table the UI shows.
+ const farmable = rows.filter(r => r.cleared || (current && r.key === current.key));
  const pool = farmable.length ? farmable : rows;
  const bestGold = pool.slice().sort((a, b) => b.goldPerSec - a.goldPerSec)[0] || null;
  const bestExp = pool.slice().sort((a, b) => b.expPerSec - a.expPerSec)[0] || null;

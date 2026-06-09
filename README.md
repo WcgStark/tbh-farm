@@ -1,74 +1,74 @@
 # TBH Farm
 
-Otimizador de farm para o idle-RPG [TBH: Task Bar Hero](https://store.steampowered.com/app/3678970/TBH_Task_Bar_Hero/).
+A farm optimizer for the idle-RPG [TBH: Task Bar Hero](https://store.steampowered.com/app/3678970/TBH_Task_Bar_Hero/).
 
-Fork de [shigake/tbh-copilot](https://github.com/shigake/tbh-copilot) — o projeto original é um dashboard completo no browser com farm, runas, gear e muito mais. Este fork é focado só em farm: um app desktop que abre sozinho, encontra o save automaticamente e mostra onde farmar.
+Fork of [shigake/tbh-copilot](https://github.com/shigake/tbh-copilot) — the original is a full in-browser dashboard with farm, runes, gear and more. This fork is focused on farming only: a desktop app that opens on its own, finds your save automatically, and shows you where to farm.
 
-> Projeto não oficial. Não afiliado nem endossado pelos desenvolvedores do TBH: Task Bar Hero.
+> Unofficial fan project. Not affiliated with or endorsed by the developers of TBH: Task Bar Hero.
 
 ---
 
-## O que faz
+## What it does
 
-Lê o save do jogo (`SaveFile_Live.es3`), decifra localmente e mostra:
+Reads the game save (`SaveFile_Live.es3`), decrypts it locally, and shows:
 
-- **Agora** — o stage que você está farmando
-- **Melhor ouro** — o stage com mais ouro/hora
-- **Melhor EXP** — o stage com mais exp/hora
-- **Avançar** — próximo stage para desbloquear
-- **Tabela completa** — todos os stages liberados ordenados por ouro ou exp, com projeções de ouro/nível em 1h, 3h, 5h e 8h
+- **Now** — the stage you're currently farming
+- **Best gold** — the stage with the most gold/hour
+- **Best EXP** — the stage with the most exp/hour
+- **Push** — the next stage to unlock
+- **Full table** — every unlocked stage ranked by gold or exp, with gold/level projections at 1h, 3h, 5h and 8h
 
-O app detecta o save automaticamente — não precisa apontar o caminho, não precisa do browser.
+The app detects the save automatically — no need to point to a path, no browser required.
 
-## Segurança
+## Safety
 
-- **Somente leitura** — nunca escreve no save, nunca modifica nada
-- **Sem rede** — nenhum dado sai da sua máquina
-- **Sem processo do jogo** — não abre, não lê memória, não injeta nada
-- **Sem anti-cheat** — leitura de arquivo é igual a um backup; nenhum anti-cheat monitora isso
+- **Read-only** — never writes to the save, never modifies anything
+- **No network** — no data ever leaves your machine
+- **No game process access** — doesn't open, read memory, or inject anything
+- **Anti-cheat safe** — reading a file is the same as a backup; no anti-cheat monitors this
 
-## Como usar
+## Usage
 
-### Rodar direto (desenvolvimento)
+### Run directly (development)
 
 ```
 npm install
 npm start
 ```
 
-### Gerar o executável
+### Build the executable
 
-Precisa de Python 3 e Node.js instalados.
+Requires Python 3 and Node.js installed.
 
 ```
 python build.py
 ```
 
-Isso gera `dist/TBH-Farm.zip`. Extraia em qualquer pasta e clique em `TBH Farm.exe`.
+This produces `dist/TBH-Farm.zip`. Extract it anywhere and run `TBH Farm.exe`.
 
 ```
-python build.py --run    # abre o app sem gerar zip
-python build.py --clean  # reinstala tudo e regera o zip
+python build.py --run    # open the app without building the zip
+python build.py --clean  # reinstall everything and rebuild the zip
 ```
 
-O save é encontrado automaticamente em:
+The save is found automatically at:
 ```
 %USERPROFILE%\AppData\LocalLow\TesseractStudio\TaskbarHero\SaveFile_Live.es3
 ```
 
-## Como funciona
+## How it works
 
-O save (ES3 / AES-CBC) é decifrado no renderer com Web Crypto usando a senha do próprio jogo. O engine (`engine/engine.js`, UMD) roda no contexto Electron e calcula os rankings de farm via `bestFarm()` e `recommend()`. Nenhuma chamada de rede em runtime.
+The save (ES3 / AES-CBC) is decrypted in the renderer with Web Crypto using the game's own password. The engine (`engine/engine.js`, UMD) runs in the Electron context and computes the farm rankings via `bestFarm()` and `recommend()`. No network calls at runtime.
 
 ```
-main.js          processo principal Electron — detecta e lê o save
-preload.js       bridge IPC segura (contextBridge)
-app/index.html   UI de farm
+main.js          Electron main process — detects and reads the save
+preload.js       safe IPC bridge (contextBridge)
+app/index.html   farm UI
 engine/          engine.js, gamedata.js, i18n.js
-data/            tabelas de stages e runas
-build.py         script de build (gera o .zip distribuível)
+data/            stage and rune tables
+build.py         build script (produces the distributable zip)
 ```
 
-## Licença
+## License
 
-Código: [MIT](LICENSE). Conteúdo e assets do jogo pertencem aos seus respectivos donos.
+Code: [MIT](LICENSE). Game content and assets belong to their respective owners.
