@@ -20,6 +20,28 @@ Reads the game save (`SaveFile_Live.es3`), decrypts it locally, and shows:
 
 The app detects the save automatically — no need to point to a path, no browser required.
 
+## Using the app
+
+Open it and it does everything on its own — no setup, no file picker. The window has two things worth knowing:
+
+### Language (EN / PT)
+
+The **EN / PT** button in the top-right toggles the whole interface between English and Portuguese (cards, table, status, stage and difficulty names). The button shows the language it will switch *to*. Your choice is remembered between sessions, and on first launch it follows your system language.
+
+### Live calibration
+
+The numbers start as a **theoretical estimate** (based on your party's DPS) and get more accurate as you play. While the game runs and autosaves, the app measures your **real gold/sec and exp/sec** and recalibrates, so "Best gold" reflects your actual farm instead of a model guess.
+
+The status next to the party bar shows the progress:
+
+| Status | Meaning |
+|---|---|
+| `calibrating…` | Collecting samples — keep the game running and farming. Takes a minute or two. |
+| `calibrated (live)` | Numbers now match your measured gold/exp rate on the current stage. |
+| `calibrated (N stages)` | You've farmed N different stages; the app uses a cross-stage model — the most accurate. |
+
+You don't have to do anything: just leave the app open while you play. The more stages you farm, the better it gets, and measured clear times are remembered between sessions. The 🟢 **live** dot means the app is watching the save and updating on its own (it re-reads only when the save file changes — never touching the game).
+
 ## Safety
 
 - **Read-only** — never writes to the save, never modifies anything
@@ -59,6 +81,8 @@ The save is found automatically at:
 ## How it works
 
 The save (ES3 / AES-CBC) is decrypted in the renderer with Web Crypto using the game's own password. The engine (`engine/engine.js`, UMD) runs in the Electron context and computes the farm rankings via `bestFarm()` and `recommend()`. No network calls at runtime.
+
+Live calibration works by sampling gold, exp and clear counts from the save on each update (keyed off in-game play time), measuring the real gold/sec and exp/sec, and feeding them back into `recommend()` so the engine back-solves your true DPS and bonus multipliers. Per-stage clear times are persisted in `localStorage`; once two or more stages are measured the engine fits a cross-stage clear model.
 
 ```
 main.js          Electron main process — detects and reads the save
