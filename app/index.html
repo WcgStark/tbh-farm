@@ -244,10 +244,11 @@ const STRINGS = {
     cardNow: 'NOW', cardGold: 'BEST GOLD', cardExp: 'BEST EXP', cardPush: 'PUSH',
     rateGoldH: 'gold/h', rateExpH: 'exp/h',
     bNow: 'now', bGold: 'best gold', bExp: 'best exp',
-    diff_NIGHTMARE: 'nightmare', diff_HELL: 'hell', diff_TORMENT: 'torment',
+    diff_NIGHTMARE: 'Nightmare', diff_HELL: 'Hell', diff_TORMENT: 'Torment',
     noStages: 'No stage available yet.',
     cal_none: 'no calibration', cal_noneNote: '(estimated model)',
     cal_calibrating: 'calibrating…', cal_fit: 'calibrated ({0} stages)', cal_live: 'calibrated (live)',
+    cal_hint: 'Keep the game open and farming — it calibrates once the game autosaves a couple of times with gold gained (≈1–2 min). The number is the samples collected so far.',
     err_decryptTitle: 'Error decrypting save',
     err_decryptMsg: 'It may be a game-version issue. ',
     err_notFoundTitle: 'Save not found',
@@ -267,10 +268,11 @@ const STRINGS = {
     cardNow: 'AGORA', cardGold: 'MELHOR OURO', cardExp: 'MELHOR EXP', cardPush: 'AVANÇAR',
     rateGoldH: 'ouro/h', rateExpH: 'exp/h',
     bNow: 'agora', bGold: 'melhor ouro', bExp: 'melhor exp',
-    diff_NIGHTMARE: 'pesadelo', diff_HELL: 'inferno', diff_TORMENT: 'tormento',
+    diff_NIGHTMARE: 'Pesadelo', diff_HELL: 'Inferno', diff_TORMENT: 'Tormento',
     noStages: 'Nenhum estágio disponível ainda.',
     cal_none: 'sem calibração', cal_noneNote: '(modelo estimado)',
     cal_calibrating: 'calibrando…', cal_fit: 'calibrado ({0} estágios)', cal_live: 'calibrado (ao vivo)',
+    cal_hint: 'Deixe o jogo aberto e farmando — calibra quando o jogo salva algumas vezes com ouro ganho (≈1–2 min). O número são as amostras coletadas até agora.',
     err_decryptTitle: 'Erro ao decifrar save',
     err_decryptMsg: 'Pode ser um problema de versão do jogo. ',
     err_notFoundTitle: 'Save não encontrado',
@@ -546,11 +548,14 @@ function render(rec) {
   $('pGold').textContent = '+' + (f.goldBonusPct || 0) + '%';
   $('pExp').textContent  = '+' + (f.expBonusPct  || 0) + '%';
   const calEl = $('pCal'), calNote = $('calNote');
+  calEl.title = '';
   if (!f.calibrated) {
-    // not calibrated yet — show "calibrating…" once we're accumulating samples
+    // not calibrated yet — show "calibrating… (N)" so progress is visible.
+    // It only leaves this state once the game autosaves twice with gold gained.
     const warming = samples.length >= 1;
-    calEl.textContent = warming ? T('cal_calibrating') : T('cal_none');
+    calEl.textContent = warming ? T('cal_calibrating') + ' (' + samples.length + ')' : T('cal_none');
     calEl.style.color = warming ? 'var(--warn)' : 'var(--mut)';
+    calEl.title = T('cal_hint');
     calNote.textContent = warming ? '' : T('cal_noneNote'); calNote.className = '';
   } else if (f.calSource === 'fit') {
     calEl.textContent = T('cal_fit', f.stagesMeasured || 0); calEl.style.color = 'var(--good)';
