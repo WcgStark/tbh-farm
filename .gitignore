@@ -10,6 +10,11 @@
 /wiki_*.html
 /wiki_sitemap.xml
 
+# ── Electron / npm ──────────────────────────────────────────────────────────
+node_modules/
+dist/
+test-shots/
+
 # ── tooling / temp ──────────────────────────────────────────────────────────
 /.gstack/
 .tmp*

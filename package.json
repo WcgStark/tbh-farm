@@ -1,0 +1,40 @@
+{
+  "name": "tbh-farm",
+  "version": "1.0.0",
+  "description": "TBH Farm Optimizer",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^33.4.0",
+    "electron-builder": "^25.1.8",
+    "playwright-core": "^1.60.0"
+  },
+  "build": {
+    "appId": "com.tbh.farm",
+    "productName": "TBH Farm",
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*",
+      "engine/engine.js",
+      "engine/gamedata.js",
+      "engine/i18n.js"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  }
+}

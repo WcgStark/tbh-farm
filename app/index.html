@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+<title>TBH Farm</title>
+<style>
+:root {
+  --bg:     #0a0e1a;
+  --card:   #111827;
+  --card2:  #0e1520;
+  --line:   #1e2a42;
+  --gold:   #f6c552;
+  --exp:    #5fd0e0;
+  --good:   #74d28e;
+  --warn:   #ffa94d;
+  --bad:    #ff6b6b;
+  --violet: #a98cff;
+  --mut:    #6a7d90;
+  --text:   #c8d8e8;
+  --px: 'JetBrains Mono', 'Consolas', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 14px; overflow-x: hidden; }
+
+/* ── header ─────────────────────────────── */
+#hdr {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 18px; background: var(--card2);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 10;
+  -webkit-app-region: drag;
+}
+#hdr .logo { font-family: var(--px); font-weight: 700; font-size: 15px; letter-spacing: 2px; color: var(--gold); }
+#hdr .logo span { color: var(--exp); }
+#hdr .spacer { flex: 1; }
+#statusDot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--mut); transition: background .4s;
+}
+#statusDot.live { background: var(--good); box-shadow: 0 0 6px var(--good); }
+#statusDot.err  { background: var(--bad); }
+#statusTxt { font-family: var(--px); font-size: 11px; letter-spacing: .5px; color: var(--mut); }
+#refreshBtn {
+  -webkit-app-region: no-drag;
+  background: none; border: 1px solid var(--line); border-radius: 6px;
+  color: var(--mut); cursor: pointer; padding: 3px 8px; font-size: 12px;
+  transition: border-color .2s, color .2s;
+}
+#refreshBtn:hover { border-color: var(--exp); color: var(--exp); }
+#readonlyBadge {
+  font-family: var(--px); font-size: 9px; letter-spacing: .6px;
+  color: var(--good); border: 1px solid #74d28e40; border-radius: 4px;
+  padding: 2px 7px; opacity: .75;
+}
+
+/* ── party info bar ──────────────────────── */
+#partyBar {
+  display: flex; gap: 20px; align-items: center;
+  padding: 8px 18px; background: var(--card2);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--px); font-size: 11px; letter-spacing: .3px; color: var(--mut);
+}
+#partyBar b { color: var(--text); }
+#partyBar .g { color: var(--gold); }
+#partyBar .x { color: var(--exp); }
+
+/* ── main content ────────────────────────── */
+#main { padding: 18px; max-width: 1120px; }
+
+/* ── farm cards ──────────────────────────── */
+#cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px; margin-bottom: 22px;
+}
+.fcard {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 16px; position: relative; overflow: hidden;
+}
+.fcard::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.fcard.now::before    { background: var(--exp); }
+.fcard.gold::before   { background: var(--gold); }
+.fcard.exp::before    { background: var(--good); }
+.fcard.push::before   { background: var(--violet); }
+.fcard .tag {
+  font-family: var(--px); font-size: 9.5px; letter-spacing: 1px;
+  color: var(--mut); text-transform: uppercase; margin-bottom: 8px; display: block;
+}
+.fcard.now  .tag { color: var(--exp); }
+.fcard.gold .tag { color: var(--gold); }
+.fcard.exp  .tag { color: var(--good); }
+.fcard.push .tag { color: var(--violet); }
+.fcard .stage-id {
+  font-family: var(--px); font-size: 22px; font-weight: 700;
+  color: var(--text); line-height: 1;
+}
+.fcard .stage-name {
+  font-size: 11.5px; color: var(--mut); margin: 3px 0 10px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fcard .rates { font-size: 12px; }
+.fcard .rates .g { color: var(--gold); font-weight: 600; }
+.fcard .rates .x { color: var(--exp); font-weight: 600; }
+.fcard .diff-badge {
+  font-family: var(--px); font-size: 9px; letter-spacing: .5px;
+  padding: 1px 5px; border-radius: 4px; border: 1px solid currentColor;
+  margin-left: 4px; vertical-align: middle; opacity: .85;
+}
+
+/* ── table section ───────────────────────── */
+#tbl-wrap { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+#tbl-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+#tbl-head .lbl { font-family: var(--px); font-size: 10px; letter-spacing: .5px; color: var(--mut); margin-right: 4px; }
+.sort-btn, .hz-btn {
+  background: none; border: 1px solid var(--line); border-radius: 5px;
+  color: var(--mut); cursor: pointer; padding: 3px 9px;
+  font-family: var(--px); font-size: 11px; letter-spacing: .3px;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.sort-btn.on, .hz-btn.on {
+  border-color: var(--exp); color: var(--exp); background: #5fd0e014;
+}
+.sort-btn:not(.on):hover, .hz-btn:not(.on):hover { border-color: var(--line); color: var(--text); }
+#tbl-head .spacer { flex: 1; }
+#calNote { font-family: var(--px); font-size: 10px; color: var(--mut); }
+#calNote.ok { color: var(--good); }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: right; padding: 9px 12px;
+  font-family: var(--px); font-size: 10px; letter-spacing: .4px; color: var(--mut);
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+thead th:first-child { text-align: left; }
+tbody tr { border-bottom: 1px solid #0d1422; transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: #ffffff06; }
+tbody tr.is-cur { background: #5fd0e00a; }
+tbody tr.is-best-gold { background: #f6c5520a; }
+tbody tr.is-best-exp  { background: #74d28e0a; }
+tbody td { padding: 7px 12px; text-align: right; color: var(--mut); font-variant-numeric: tabular-nums; font-size: 13px; }
+tbody td:first-child { text-align: left; }
+.td-label { font-family: var(--px); font-size: 12px; font-weight: 600; color: var(--text); }
+.td-name  { font-size: 11px; color: var(--mut); }
+.td-g { color: var(--gold); }
+.td-x { color: var(--exp); }
+.td-proj { color: var(--text); }
+.row-badge {
+  display: inline-block; font-family: var(--px); font-size: 8.5px; letter-spacing: .4px;
+  padding: 1px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle;
+}
+.rb-cur  { background: #5fd0e022; color: var(--exp); border: 1px solid #5fd0e040; }
+.rb-gold { background: #f6c55222; color: var(--gold); border: 1px solid #f6c55240; }
+.rb-exp  { background: #74d28e22; color: var(--good); border: 1px solid #74d28e40; }
+
+/* ── error / loading states ──────────────── */
+#overlay {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 60vh; gap: 14px; text-align: center; padding: 32px;
+}
+#overlay .icon { font-size: 40px; margin-bottom: 4px; }
+#overlay h2 { font-size: 17px; color: var(--text); }
+#overlay p  { font-size: 13px; color: var(--mut); max-width: 460px; line-height: 1.6; }
+#overlay code {
+  font-family: var(--px); font-size: 11px; background: var(--card);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px;
+  color: var(--warn); display: block; margin-top: 4px; text-align: left; line-height: 1.8;
+}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div class="logo">TBH <span>FARM</span></div>
+  <div class="spacer"></div>
+  <span id="readonlyBadge" title="Lê o save localmente. Nunca escreve nem toca no processo do jogo.">SOMENTE LEITURA</span>
+  <div id="statusDot"></div>
+  <div id="statusTxt">aguardando…</div>
+  <button id="refreshBtn" onclick="forceRefresh()">↺</button>
+</div>
+
+<div id="partyBar" style="display:none">
+  Party Lv <b id="pLv">—</b>
+  &nbsp;·&nbsp; Gold <span class="g"><b id="pGold">—</b></span>
+  &nbsp;·&nbsp; EXP <span class="x"><b id="pExp">—</b></span>
+  &nbsp;·&nbsp; <span id="pCal" style="color:var(--mut)">sem calibração</span>
+</div>
+
+<div id="main">
+  <div id="overlay">
+    <div class="icon">⚔️</div>
+    <h2>Carregando save…</h2>
+    <p>Procurando o arquivo de save do TBH…</p>
+  </div>
+  <div id="content" style="display:none">
+    <div id="cards"></div>
+    <div id="tbl-wrap">
+      <div id="tbl-head">
+        <span class="lbl">Ordenar:</span>
+        <button class="sort-btn on" data-s="gold" onclick="setSort(this)">OURO</button>
+        <button class="sort-btn"    data-s="exp"  onclick="setSort(this)">EXP</button>
+        <div class="spacer"></div>
+        <span class="lbl">Projeção:</span>
+        <button class="hz-btn" data-h="1"  onclick="setHorizon(this)">1h</button>
+        <button class="hz-btn" data-h="3"  onclick="setHorizon(this)">3h</button>
+        <button class="hz-btn on" data-h="5" onclick="setHorizon(this)">5h</button>
+        <button class="hz-btn" data-h="8"  onclick="setHorizon(this)">8h</button>
+        <span id="calNote"></span>
+      </div>
+      <div id="tbl-body"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../engine/gamedata.js"></script>
+<script src="../engine/i18n.js"></script>
+<script src="../engine/engine.js"></script>
+<script>
+'use strict';
+
+const PASSWORD = 'emuMqG3bLYJ938ZDCfieWJ';
+const ENG = window.TBHEngine;
+const DB  = window.TBH_DB;
+const I18N = window.TBH_I18N;
+
+const LOC = 'pt-BR';
+const nm = m => I18N.entityName(m, LOC);
+const stageName  = k => { const s = DB.stages[String(k)]; return s ? nm(s.name) : '#' + k; };
+const stageLabel = k => { const s = DB.stages[String(k)]; return s ? s.label   : '#' + k; };
+
+const fmt  = n => n == null ? '—' : n >= 1e9 ? +(n/1e9).toFixed(2)+'B' : n >= 1e6 ? +(n/1e6).toFixed(2)+'M' : n >= 1e3 ? +(n/1e3).toFixed(1)+'k' : Math.round(n);
+const fmtK = n => fmt(Math.round(n || 0));
+
+let farmSort    = localStorage.getItem('tbh_farmsort') || 'gold';
+let farmHorizon = +(localStorage.getItem('tbh_farmhz')) || 5;
+let lastRec     = null;
+let pollTimer   = null;
+let pollMs      = 3000;
+
+// ── init sort/horizon buttons ─────────────
+document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('on', b.dataset.s === farmSort));
+document.querySelectorAll('.hz-btn').forEach(b => b.classList.toggle('on', +b.dataset.h === farmHorizon));
+
+function setSort(btn) {
+  farmSort = btn.dataset.s;
+  localStorage.setItem('tbh_farmsort', farmSort);
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('on', b === btn));
+  if (lastRec) render(lastRec);
+}
+function setHorizon(btn) {
+  farmHorizon = +btn.dataset.h;
+  localStorage.setItem('tbh_farmhz', farmHorizon);
+  document.querySelectorAll('.hz-btn').forEach(b => b.classList.toggle('on', b === btn));
+  if (lastRec) render(lastRec);
+}
+
+// ── save decryption ───────────────────────
+async function decryptSave(b64) {
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const iv    = bytes.slice(0, 16);
+  const ct    = bytes.slice(16);
+  const raw   = new TextEncoder().encode(PASSWORD);
+  const base  = await crypto.subtle.importKey('raw', raw, { name: 'PBKDF2' }, false, ['deriveKey']);
+  const key   = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: iv, iterations: 100, hash: 'SHA-1' },
+    base,
+    { name: 'AES-CBC', length: 128 },
+    false, ['decrypt']
+  );
+  let out = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, key, ct));
+  if (out[0] === 0x1f && out[1] === 0x8b) {
+    out = new Uint8Array(
+      await new Response(
+        new Blob([out]).stream().pipeThrough(new DecompressionStream('gzip'))
+      ).arrayBuffer()
+    );
+  }
+  return JSON.parse(new TextDecoder().decode(out));
+}
+
+// ── status helpers ────────────────────────
+function setStatus(state, text) {
+  const dot = document.getElementById('statusDot');
+  dot.className = state === 'live' ? 'live' : state === 'err' ? 'err' : '';
+  document.getElementById('statusTxt').textContent = text;
+}
+
+// ── main load + poll ──────────────────────
+async function loadSave(b64) {
+  try {
+    const raw = await decryptSave(b64);
+    const psd = ENG.parseSave(raw.PlayerSaveData.value);
+    const rec = ENG.recommend(psd, { elapsedSec: 0 });
+    lastRec = rec;
+    render(rec);
+    setStatus('live', 'ao vivo');
+    showContent();
+  } catch (e) {
+    setStatus('err', 'erro ao ler save');
+    showError('Erro ao decifrar save', 'Pode ser um problema de versão do jogo. ' + e.message);
+  }
+}
+
+async function init() {
+  setStatus('', 'lendo save…');
+  const res = await window.tbhAPI.readSave();
+  if (res.error === 'notfound') {
+    setStatus('err', 'save não encontrado');
+    showError('Save não encontrado', `O TBH precisa estar instalado e ter sido aberto ao menos uma vez.\n\nCaminho esperado:\n${res.path}`);
+    return;
+  }
+  if (res.error) {
+    setStatus('err', 'erro');
+    showError('Erro ao ler arquivo', res.error);
+    return;
+  }
+  await loadSave(res.data);
+  startPoll();
+}
+
+async function forceRefresh() {
+  clearTimeout(pollTimer);
+  const res = await window.tbhAPI.readSave();
+  if (res.data) await loadSave(res.data);
+  startPoll();
+}
+
+function startPoll() {
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(poll, pollMs);
+}
+
+async function poll() {
+  const res = await window.tbhAPI.checkSave();
+  if (res.changed && res.data) {
+    pollMs = 3000;
+    await loadSave(res.data);
+  } else {
+    pollMs = Math.min(Math.round(pollMs * 1.3), 15000);
+  }
+  startPoll();
+}
+
+// ── UI show/hide ──────────────────────────
+function showContent() {
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('content').style.display = '';
+  document.getElementById('partyBar').style.display = '';
+}
+function showError(title, msg) {
+  document.getElementById('content').style.display = 'none';
+  document.getElementById('partyBar').style.display = 'none';
+  const ov = document.getElementById('overlay');
+  ov.style.display = '';
+  ov.innerHTML = `
+    <div class="icon">⚠️</div>
+    <h2>${title}</h2>
+    <p>${msg.replace(/\n/g, '<br>')}</p>
+  `;
+}
+
+// ── rendering ─────────────────────────────
+const DIFF_COL = { NIGHTMARE: 'var(--warn)', HELL: 'var(--bad)', TORMENT: 'var(--violet)' };
+const DIFF_PT  = { NORMAL: '', NIGHTMARE: 'pesadelo', HELL: 'inferno', TORMENT: 'tormento' };
+
+function diffBadge(diff) {
+  if (!diff || diff === 'NORMAL') return '';
+  const col = DIFF_COL[diff] || 'var(--warn)';
+  return `<span class="diff-badge" style="color:${col}">${DIFF_PT[diff] || diff.toLowerCase()}</span>`;
+}
+
+function stageCell(key, diff) {
+  return `<div class="td-label">${stageLabel(key)}${diffBadge(diff)}</div>`
+       + `<div class="td-name">${stageName(key)}</div>`;
+}
+
+function card(cls, tag, r) {
+  const col = DIFF_COL[r.diff];
+  return `
+  <div class="fcard ${cls}">
+    <span class="tag">${tag}</span>
+    <div class="stage-id">${stageLabel(r.key)}</div>
+    <div class="stage-name">${stageName(r.key)}${col ? `&nbsp;<span class="diff-badge" style="color:${col}">${DIFF_PT[r.diff]||r.diff}</span>` : ''} · Lv${r.lvl}</div>
+    <div class="rates">
+      <span class="g">${fmtK(r.goldPerHour||0)}</span> ouro/h &nbsp;·&nbsp;
+      <span class="x">${fmtK(r.expPerHour||0)}</span> exp/h
+    </div>
+  </div>`;
+}
+
+function render(rec) {
+  const f = rec.farm;
+
+  // party bar
+  document.getElementById('pLv').textContent   = f.partyLevel || '?';
+  document.getElementById('pGold').textContent = '+' + (f.goldBonusPct || 0) + '%';
+  document.getElementById('pExp').textContent  = '+' + (f.expBonusPct  || 0) + '%';
+  const calEl = document.getElementById('pCal');
+  const calNote = document.getElementById('calNote');
+  if (!f.calibrated) {
+    calEl.textContent = 'sem calibração'; calEl.style.color = 'var(--mut)';
+    calNote.textContent = '(modelo estimado)'; calNote.className = '';
+  } else if (f.calSource === 'fit') {
+    calEl.textContent = `calibrado (${f.stagesMeasured||0} estágios)`; calEl.style.color = 'var(--good)';
+    calNote.textContent = ''; calNote.className = 'ok';
+  } else {
+    calEl.textContent = 'calibrado'; calEl.style.color = 'var(--good)';
+    calNote.textContent = ''; calNote.className = 'ok';
+  }
+
+  // cards
+  let cards = '';
+  if (f.current) cards += card('now', 'AGORA', f.current);
+  const sameAsCur = r => f.current && r && r.key === f.current.key;
+  if (f.bestGold && !sameAsCur(f.bestGold)) cards += card('gold', 'MELHOR OURO', f.bestGold);
+  if (f.bestExp  && !sameAsCur(f.bestExp) && (!f.bestGold || f.bestExp.key !== f.bestGold.key))
+    cards += card('exp', 'MELHOR EXP', f.bestExp);
+  if (f.push) cards += card('push', 'AVANÇAR', f.push);
+  document.getElementById('cards').innerHTML = cards || '<div style="color:var(--mut)">Nenhum estágio disponível ainda.</div>';
+
+  // table
+  const all   = (f.all || []).filter(r => r.cleared || (f.current && r.key === f.current.key));
+  const carry = (rec.level || []).slice().sort((a, b) => b.level - a.level)[0]
+              || { level: f.partyLevel || 1, heroExp: 0 };
+  const HRS   = [1, 3, 5, 8];
+  const gold  = farmSort === 'gold';
+  const proj  = (r, h) => gold
+    ? (r.goldPerHour || 0) * h
+    : ENG.projectLevel(carry.level, carry.heroExp, r.expPerSec, r.lvl, h);
+  const fmtH  = (n, h) => gold
+    ? fmtK(n)
+    : n != null ? n.toFixed(1) : '-';
+
+  all.sort((a, b) => proj(b, farmHorizon) - proj(a, farmHorizon));
+
+  const ths = HRS.map(h =>
+    `<th class="hz-col">${h}h</th>`
+  ).join('');
+
+  const rows = all.map(r => {
+    const isCur      = f.current && r.key === f.current.key;
+    const isBestGold = f.bestGold && r.key === f.bestGold.key;
+    const isBestExp  = f.bestExp  && r.key === f.bestExp.key;
+    const rowCls     = isCur ? 'is-cur' : isBestGold ? 'is-best-gold' : isBestExp ? 'is-best-exp' : '';
+    const badges     = (isCur      ? '<span class="row-badge rb-cur">agora</span>'  : '')
+                     + (isBestGold ? '<span class="row-badge rb-gold">melhor ouro</span>' : '')
+                     + (isBestExp  ? '<span class="row-badge rb-exp">melhor exp</span>'  : '');
+    const projCols = HRS.map(h => {
+      const v   = proj(r, h);
+      const cls = h === farmHorizon ? 'td-proj' : '';
+      return `<td class="${cls}">${fmtH(v, h)}</td>`;
+    }).join('');
+    return `<tr class="${rowCls}">
+      <td>${stageCell(r.key, r.diff)}${badges}</td>
+      <td class="td-x">${fmtK(r.expPerHour||0)}</td>
+      <td class="td-g">${fmtK(r.goldPerHour||0)}</td>
+      ${projCols}
+    </tr>`;
+  }).join('');
+
+  const projHdr = gold ? 'Ouro proj.' : 'Nível proj.';
+  document.getElementById('tbl-body').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left">Estágio</th>
+          <th>EXP/H</th>
+          <th>GOLD/H</th>
+          ${ths}
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ── start ─────────────────────────────────
+init();
+</script>
+</body>
+</html>
