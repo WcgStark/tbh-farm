@@ -41,13 +41,14 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 #statusDot.live { background: var(--good); box-shadow: 0 0 6px var(--good); }
 #statusDot.err  { background: var(--bad); }
 #statusTxt { font-family: var(--px); font-size: 11px; letter-spacing: .5px; color: var(--mut); }
-#refreshBtn {
+#refreshBtn, #langBtn {
   -webkit-app-region: no-drag;
   background: none; border: 1px solid var(--line); border-radius: 6px;
   color: var(--mut); cursor: pointer; padding: 3px 8px; font-size: 12px;
   transition: border-color .2s, color .2s;
 }
-#refreshBtn:hover { border-color: var(--exp); color: var(--exp); }
+#langBtn { font-family: var(--px); font-size: 10px; letter-spacing: .5px; min-width: 34px; }
+#refreshBtn:hover, #langBtn:hover { border-color: var(--exp); color: var(--exp); }
 #readonlyBadge {
   font-family: var(--px); font-size: 9px; letter-spacing: .6px;
   color: var(--good); border: 1px solid #74d28e40; border-radius: 4px;
@@ -56,7 +57,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 
 /* ── party info bar ──────────────────────── */
 #partyBar {
-  display: flex; gap: 20px; align-items: center;
+  display: flex; gap: 8px; align-items: center;
   padding: 8px 18px; background: var(--card2);
   border-bottom: 1px solid var(--line);
   font-family: var(--px); font-size: 11px; letter-spacing: .3px; color: var(--mut);
@@ -64,6 +65,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 #partyBar b { color: var(--text); }
 #partyBar .g { color: var(--gold); }
 #partyBar .x { color: var(--exp); }
+#partyBar .sep { opacity: .4; }
 
 /* ── main content ────────────────────────── */
 #main { padding: 18px; max-width: 1120px; }
@@ -180,34 +182,31 @@ tbody td:first-child { text-align: left; }
 <div id="hdr">
   <div class="logo">TBH <span>FARM</span></div>
   <div class="spacer"></div>
-  <span id="readonlyBadge" title="Lê o save localmente. Nunca escreve nem toca no processo do jogo.">SOMENTE LEITURA</span>
+  <button id="langBtn" onclick="toggleLang()">EN</button>
+  <span id="readonlyBadge"></span>
   <div id="statusDot"></div>
-  <div id="statusTxt">aguardando…</div>
+  <div id="statusTxt"></div>
   <button id="refreshBtn" onclick="forceRefresh()">↺</button>
 </div>
 
 <div id="partyBar" style="display:none">
-  Party Lv <b id="pLv">—</b>
-  &nbsp;·&nbsp; Gold <span class="g"><b id="pGold">—</b></span>
-  &nbsp;·&nbsp; EXP <span class="x"><b id="pExp">—</b></span>
-  &nbsp;·&nbsp; <span id="pCal" style="color:var(--mut)">sem calibração</span>
+  <span id="pPartyLbl"></span> <b id="pLv">—</b>
+  <span class="sep">·</span> <span id="pGoldLbl"></span> <span class="g"><b id="pGold">—</b></span>
+  <span class="sep">·</span> <span id="pExpLbl"></span> <span class="x"><b id="pExp">—</b></span>
+  <span class="sep">·</span> <span id="pCal" style="color:var(--mut)"></span>
 </div>
 
 <div id="main">
-  <div id="overlay">
-    <div class="icon">⚔️</div>
-    <h2>Carregando save…</h2>
-    <p>Procurando o arquivo de save do TBH…</p>
-  </div>
+  <div id="overlay"></div>
   <div id="content" style="display:none">
     <div id="cards"></div>
     <div id="tbl-wrap">
       <div id="tbl-head">
-        <span class="lbl">Ordenar:</span>
-        <button class="sort-btn on" data-s="gold" onclick="setSort(this)">OURO</button>
-        <button class="sort-btn"    data-s="exp"  onclick="setSort(this)">EXP</button>
+        <span class="lbl" id="sortLbl"></span>
+        <button class="sort-btn on" data-s="gold" onclick="setSort(this)"></button>
+        <button class="sort-btn"    data-s="exp"  onclick="setSort(this)"></button>
         <div class="spacer"></div>
-        <span class="lbl">Projeção:</span>
+        <span class="lbl" id="projLbl"></span>
         <button class="hz-btn" data-h="1"  onclick="setHorizon(this)">1h</button>
         <button class="hz-btn" data-h="3"  onclick="setHorizon(this)">3h</button>
         <button class="hz-btn on" data-h="5" onclick="setHorizon(this)">5h</button>
@@ -230,19 +229,80 @@ const ENG = window.TBHEngine;
 const DB  = window.TBH_DB;
 const I18N = window.TBH_I18N;
 
-const LOC = 'pt-BR';
-const nm = m => I18N.entityName(m, LOC);
+/* ── i18n ─────────────────────────────────── */
+const STRINGS = {
+  en: {
+    locale: 'en-US',
+    readonly: 'READ-ONLY',
+    readonlyTitle: 'Reads the save locally. Never writes to it or touches the game process.',
+    st_waiting: 'waiting…', st_reading: 'reading save…', st_live: 'live',
+    st_readErr: 'error reading save', st_notFound: 'save not found', st_error: 'error',
+    partyLv: 'Party Lv', gold: 'Gold', exp: 'EXP',
+    loadingTitle: 'Loading save…', loadingMsg: 'Looking for the TBH save file…',
+    sortLbl: 'Sort:', projLbl: 'Projection:', sortGold: 'GOLD', sortExp: 'EXP',
+    colStage: 'Stage',
+    cardNow: 'NOW', cardGold: 'BEST GOLD', cardExp: 'BEST EXP', cardPush: 'PUSH',
+    rateGoldH: 'gold/h', rateExpH: 'exp/h',
+    bNow: 'now', bGold: 'best gold', bExp: 'best exp',
+    diff_NIGHTMARE: 'nightmare', diff_HELL: 'hell', diff_TORMENT: 'torment',
+    noStages: 'No stage available yet.',
+    cal_none: 'no calibration', cal_noneNote: '(estimated model)',
+    cal_calibrating: 'calibrating…', cal_fit: 'calibrated ({0} stages)', cal_live: 'calibrated (live)',
+    err_decryptTitle: 'Error decrypting save',
+    err_decryptMsg: 'It may be a game-version issue. ',
+    err_notFoundTitle: 'Save not found',
+    err_notFoundMsg: 'TBH must be installed and opened at least once.\n\nExpected path:\n{0}',
+    err_readTitle: 'Error reading the file',
+  },
+  pt: {
+    locale: 'pt-BR',
+    readonly: 'SOMENTE LEITURA',
+    readonlyTitle: 'Lê o save localmente. Nunca escreve nem toca no processo do jogo.',
+    st_waiting: 'aguardando…', st_reading: 'lendo save…', st_live: 'ao vivo',
+    st_readErr: 'erro ao ler save', st_notFound: 'save não encontrado', st_error: 'erro',
+    partyLv: 'Party Lv', gold: 'Ouro', exp: 'EXP',
+    loadingTitle: 'Carregando save…', loadingMsg: 'Procurando o arquivo de save do TBH…',
+    sortLbl: 'Ordenar:', projLbl: 'Projeção:', sortGold: 'OURO', sortExp: 'EXP',
+    colStage: 'Estágio',
+    cardNow: 'AGORA', cardGold: 'MELHOR OURO', cardExp: 'MELHOR EXP', cardPush: 'AVANÇAR',
+    rateGoldH: 'ouro/h', rateExpH: 'exp/h',
+    bNow: 'agora', bGold: 'melhor ouro', bExp: 'melhor exp',
+    diff_NIGHTMARE: 'pesadelo', diff_HELL: 'inferno', diff_TORMENT: 'tormento',
+    noStages: 'Nenhum estágio disponível ainda.',
+    cal_none: 'sem calibração', cal_noneNote: '(modelo estimado)',
+    cal_calibrating: 'calibrando…', cal_fit: 'calibrado ({0} estágios)', cal_live: 'calibrado (ao vivo)',
+    err_decryptTitle: 'Erro ao decifrar save',
+    err_decryptMsg: 'Pode ser um problema de versão do jogo. ',
+    err_notFoundTitle: 'Save não encontrado',
+    err_notFoundMsg: 'O TBH precisa estar instalado e ter sido aberto ao menos uma vez.\n\nCaminho esperado:\n{0}',
+    err_readTitle: 'Erro ao ler o arquivo',
+  },
+};
+let LANG = localStorage.getItem('tbh_lang') || ((navigator.language || 'en').toLowerCase().startsWith('pt') ? 'pt' : 'en');
+const T = (k, ...a) => {
+  let s = (STRINGS[LANG] && STRINGS[LANG][k]) || STRINGS.en[k] || k;
+  a.forEach((v, i) => { s = s.replace('{' + i + '}', v); });
+  return s;
+};
+
+const nm = m => I18N.entityName(m, STRINGS[LANG].locale);
 const stageName  = k => { const s = DB.stages[String(k)]; return s ? nm(s.name) : '#' + k; };
 const stageLabel = k => { const s = DB.stages[String(k)]; return s ? s.label   : '#' + k; };
 
 const fmt  = n => n == null ? '—' : n >= 1e9 ? +(n/1e9).toFixed(2)+'B' : n >= 1e6 ? +(n/1e6).toFixed(2)+'M' : n >= 1e3 ? +(n/1e3).toFixed(1)+'k' : Math.round(n);
 const fmtK = n => fmt(Math.round(n || 0));
+const $ = id => document.getElementById(id);
 
 let farmSort    = localStorage.getItem('tbh_farmsort') || 'gold';
 let farmHorizon = +(localStorage.getItem('tbh_farmhz')) || 5;
 let lastRec     = null;
 let pollTimer   = null;
 let pollMs      = 3000;
+
+// view = overlay state: {mode:'loading'} | {mode:'error', titleKey, msgKey, arg} | {mode:'content'}
+let view = { mode: 'loading' };
+// status = header status: {state, key}
+let status = { state: '', key: 'st_waiting' };
 
 // ── init sort/horizon buttons ─────────────
 document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('on', b.dataset.s === farmSort));
@@ -259,6 +319,78 @@ function setHorizon(btn) {
   localStorage.setItem('tbh_farmhz', farmHorizon);
   document.querySelectorAll('.hz-btn').forEach(b => b.classList.toggle('on', b === btn));
   if (lastRec) render(lastRec);
+}
+
+function toggleLang() {
+  LANG = LANG === 'en' ? 'pt' : 'en';
+  localStorage.setItem('tbh_lang', LANG);
+  applyLang();
+}
+
+// ── apply all static/translated strings ───
+function applyLang() {
+  $('langBtn').textContent = LANG === 'en' ? 'PT' : 'EN';
+  document.documentElement.lang = STRINGS[LANG].locale;
+  $('readonlyBadge').textContent = T('readonly');
+  $('readonlyBadge').title = T('readonlyTitle');
+  $('pPartyLbl').textContent = T('partyLv');
+  $('pGoldLbl').textContent  = T('gold');
+  $('pExpLbl').textContent   = T('exp');
+  $('sortLbl').textContent   = T('sortLbl');
+  $('projLbl').textContent   = T('projLbl');
+  document.querySelector('.sort-btn[data-s="gold"]').textContent = T('sortGold');
+  document.querySelector('.sort-btn[data-s="exp"]').textContent  = T('sortExp');
+  $('statusTxt').textContent = T(status.key);
+  if (view.mode !== 'content') renderOverlay();
+  if (lastRec) render(lastRec);
+}
+
+// ── status helpers ────────────────────────
+function setStatus(state, key) {
+  status = { state, key };
+  $('statusDot').className = state === 'live' ? 'live' : state === 'err' ? 'err' : '';
+  $('statusTxt').textContent = T(key);
+}
+
+// ── live calibration (measure real gold/exp/clear from the save) ──
+let samples = [], lastStageKey = null, clearStore = {};
+try { clearStore = JSON.parse(localStorage.getItem('tbh_clearmodel') || '{}'); } catch (e) {}
+
+function pushSample(psd) {
+  const c = psd.commonSaveData;
+  if (String(c.currentStageKey) !== lastStageKey) { samples = []; lastStageKey = String(c.currentStageKey); }
+  const pt = Math.round(c.playTime || 0);
+  const g = ENG.gold(psd), x = ENG.partyExp(psd), cl = ENG.totalClears(psd);
+  const last = samples[samples.length - 1];
+  if (!last || last.pt !== pt || last.g !== g) samples.push({ pt, g, x, c: cl });
+  if (samples.length > 400) samples.shift();
+}
+// average rate of field f over sample deltas (only counts positive gains)
+function rateOf(f) {
+  if (samples.length < 2) return null;
+  let gain = 0, dt = 0;
+  for (let i = 1; i < samples.length; i++) {
+    const dp = samples[i].pt - samples[i - 1].pt, dg = (samples[i][f] || 0) - (samples[i - 1][f] || 0);
+    if (dp > 0) { dt += dp; if (dg > 0) gain += dg; }
+  }
+  return dt > 0 ? gain / dt : null;
+}
+function measuredClearSec() {
+  if (samples.length < 2) return null;
+  let dc = 0, dt = 0;
+  for (let i = 1; i < samples.length; i++) {
+    const dp = samples[i].pt - samples[i - 1].pt, dcl = (samples[i].c || 0) - (samples[i - 1].c || 0);
+    if (dp > 0 && dcl > 0) { dt += dp; dc += dcl; }
+  }
+  return dc > 0 ? dt / dc : null;
+}
+// persist the measured clear time per stage → fit model across stages
+function storeClear(psd, cs) {
+  if (cs == null || !(cs > 5 && cs < 900)) return;
+  const sk = String(psd.commonSaveData.currentStageKey), st = DB.stages[sk];
+  if (!st) return;
+  clearStore[sk] = { hp: st.totalHP, waves: st.waves, clearSec: cs };
+  try { localStorage.setItem('tbh_clearmodel', JSON.stringify(clearStore)); } catch (e) {}
 }
 
 // ── save decryption ───────────────────────
@@ -285,40 +417,45 @@ async function decryptSave(b64) {
   return JSON.parse(new TextDecoder().decode(out));
 }
 
-// ── status helpers ────────────────────────
-function setStatus(state, text) {
-  const dot = document.getElementById('statusDot');
-  dot.className = state === 'live' ? 'live' : state === 'err' ? 'err' : '';
-  document.getElementById('statusTxt').textContent = text;
-}
-
 // ── main load + poll ──────────────────────
 async function loadSave(b64) {
   try {
     const raw = await decryptSave(b64);
     const psd = ENG.parseSave(raw.PlayerSaveData.value);
-    const rec = ENG.recommend(psd, { elapsedSec: 0 });
+
+    // feed the calibration sampler with this fresh save
+    pushSample(psd);
+    const gps = rateOf('g'), eps = rateOf('x'), cs = measuredClearSec();
+    storeClear(psd, cs);
+
+    const rec = ENG.recommend(psd, {
+      goldPerSec:   gps != null ? gps : undefined,
+      expPerSec:    eps != null ? eps : undefined,
+      clearSec:     cs  != null ? cs  : undefined,
+      clearSamples: Object.values(clearStore),
+      elapsedSec:   0,
+    });
     lastRec = rec;
     render(rec);
-    setStatus('live', 'ao vivo');
+    setStatus('live', 'st_live');
     showContent();
   } catch (e) {
-    setStatus('err', 'erro ao ler save');
-    showError('Erro ao decifrar save', 'Pode ser um problema de versão do jogo. ' + e.message);
+    setStatus('err', 'st_readErr');
+    showError('err_decryptTitle', 'err_decryptMsg', e.message);
   }
 }
 
 async function init() {
-  setStatus('', 'lendo save…');
+  setStatus('', 'st_reading');
   const res = await window.tbhAPI.readSave();
   if (res.error === 'notfound') {
-    setStatus('err', 'save não encontrado');
-    showError('Save não encontrado', `O TBH precisa estar instalado e ter sido aberto ao menos uma vez.\n\nCaminho esperado:\n${res.path}`);
+    setStatus('err', 'st_notFound');
+    showError('err_notFoundTitle', 'err_notFoundMsg', res.path);
     return;
   }
   if (res.error) {
-    setStatus('err', 'erro');
-    showError('Erro ao ler arquivo', res.error);
+    setStatus('err', 'st_error');
+    showError('err_readTitle', null, res.error);
     return;
   }
   await loadSave(res.data);
@@ -348,32 +485,38 @@ async function poll() {
   startPoll();
 }
 
-// ── UI show/hide ──────────────────────────
-function showContent() {
-  document.getElementById('overlay').style.display = 'none';
-  document.getElementById('content').style.display = '';
-  document.getElementById('partyBar').style.display = '';
+// ── overlay (loading / error) ─────────────
+function renderOverlay() {
+  const ov = $('overlay');
+  if (view.mode === 'loading') {
+    ov.innerHTML = `<div class="icon">⚔️</div><h2>${T('loadingTitle')}</h2><p>${T('loadingMsg')}</p>`;
+  } else if (view.mode === 'error') {
+    const msg = (view.msgKey ? T(view.msgKey, view.arg || '') : (view.arg || ''));
+    ov.innerHTML = `<div class="icon">⚠️</div><h2>${T(view.titleKey)}</h2><p>${String(msg).replace(/\n/g, '<br>')}</p>`;
+  }
 }
-function showError(title, msg) {
-  document.getElementById('content').style.display = 'none';
-  document.getElementById('partyBar').style.display = 'none';
-  const ov = document.getElementById('overlay');
-  ov.style.display = '';
-  ov.innerHTML = `
-    <div class="icon">⚠️</div>
-    <h2>${title}</h2>
-    <p>${msg.replace(/\n/g, '<br>')}</p>
-  `;
+function showContent() {
+  view = { mode: 'content' };
+  $('overlay').style.display = 'none';
+  $('content').style.display = '';
+  $('partyBar').style.display = '';
+}
+function showError(titleKey, msgKey, arg) {
+  view = { mode: 'error', titleKey, msgKey, arg };
+  $('content').style.display = 'none';
+  $('partyBar').style.display = 'none';
+  $('overlay').style.display = '';
+  renderOverlay();
 }
 
 // ── rendering ─────────────────────────────
 const DIFF_COL = { NIGHTMARE: 'var(--warn)', HELL: 'var(--bad)', TORMENT: 'var(--violet)' };
-const DIFF_PT  = { NORMAL: '', NIGHTMARE: 'pesadelo', HELL: 'inferno', TORMENT: 'tormento' };
+const diffName = d => (d && d !== 'NORMAL') ? T('diff_' + d) : '';
 
 function diffBadge(diff) {
   if (!diff || diff === 'NORMAL') return '';
   const col = DIFF_COL[diff] || 'var(--warn)';
-  return `<span class="diff-badge" style="color:${col}">${DIFF_PT[diff] || diff.toLowerCase()}</span>`;
+  return `<span class="diff-badge" style="color:${col}">${diffName(diff)}</span>`;
 }
 
 function stageCell(key, diff) {
@@ -381,16 +524,16 @@ function stageCell(key, diff) {
        + `<div class="td-name">${stageName(key)}</div>`;
 }
 
-function card(cls, tag, r) {
+function card(cls, tagKey, r) {
   const col = DIFF_COL[r.diff];
   return `
   <div class="fcard ${cls}">
-    <span class="tag">${tag}</span>
+    <span class="tag">${T(tagKey)}</span>
     <div class="stage-id">${stageLabel(r.key)}</div>
-    <div class="stage-name">${stageName(r.key)}${col ? `&nbsp;<span class="diff-badge" style="color:${col}">${DIFF_PT[r.diff]||r.diff}</span>` : ''} · Lv${r.lvl}</div>
+    <div class="stage-name">${stageName(r.key)}${col ? `&nbsp;<span class="diff-badge" style="color:${col}">${diffName(r.diff)}</span>` : ''} · Lv${r.lvl}</div>
     <div class="rates">
-      <span class="g">${fmtK(r.goldPerHour||0)}</span> ouro/h &nbsp;·&nbsp;
-      <span class="x">${fmtK(r.expPerHour||0)}</span> exp/h
+      <span class="g">${fmtK(r.goldPerHour||0)}</span> ${T('rateGoldH')} &nbsp;·&nbsp;
+      <span class="x">${fmtK(r.expPerHour||0)}</span> ${T('rateExpH')}
     </div>
   </div>`;
 }
@@ -399,33 +542,35 @@ function render(rec) {
   const f = rec.farm;
 
   // party bar
-  document.getElementById('pLv').textContent   = f.partyLevel || '?';
-  document.getElementById('pGold').textContent = '+' + (f.goldBonusPct || 0) + '%';
-  document.getElementById('pExp').textContent  = '+' + (f.expBonusPct  || 0) + '%';
-  const calEl = document.getElementById('pCal');
-  const calNote = document.getElementById('calNote');
+  $('pLv').textContent   = f.partyLevel || '?';
+  $('pGold').textContent = '+' + (f.goldBonusPct || 0) + '%';
+  $('pExp').textContent  = '+' + (f.expBonusPct  || 0) + '%';
+  const calEl = $('pCal'), calNote = $('calNote');
   if (!f.calibrated) {
-    calEl.textContent = 'sem calibração'; calEl.style.color = 'var(--mut)';
-    calNote.textContent = '(modelo estimado)'; calNote.className = '';
+    // not calibrated yet — show "calibrating…" once we're accumulating samples
+    const warming = samples.length >= 1;
+    calEl.textContent = warming ? T('cal_calibrating') : T('cal_none');
+    calEl.style.color = warming ? 'var(--warn)' : 'var(--mut)';
+    calNote.textContent = warming ? '' : T('cal_noneNote'); calNote.className = '';
   } else if (f.calSource === 'fit') {
-    calEl.textContent = `calibrado (${f.stagesMeasured||0} estágios)`; calEl.style.color = 'var(--good)';
+    calEl.textContent = T('cal_fit', f.stagesMeasured || 0); calEl.style.color = 'var(--good)';
     calNote.textContent = ''; calNote.className = 'ok';
   } else {
-    calEl.textContent = 'calibrado'; calEl.style.color = 'var(--good)';
+    calEl.textContent = T('cal_live'); calEl.style.color = 'var(--good)';
     calNote.textContent = ''; calNote.className = 'ok';
   }
 
   // cards
   let cards = '';
-  if (f.current) cards += card('now', 'AGORA', f.current);
+  if (f.current) cards += card('now', 'cardNow', f.current);
   const sameAsCur = r => f.current && r && r.key === f.current.key;
-  if (f.bestGold && !sameAsCur(f.bestGold)) cards += card('gold', 'MELHOR OURO', f.bestGold);
+  if (f.bestGold && !sameAsCur(f.bestGold)) cards += card('gold', 'cardGold', f.bestGold);
   if (f.bestExp  && !sameAsCur(f.bestExp) && (!f.bestGold || f.bestExp.key !== f.bestGold.key))
-    cards += card('exp', 'MELHOR EXP', f.bestExp);
-  if (f.push) cards += card('push', 'AVANÇAR', f.push);
-  document.getElementById('cards').innerHTML = cards || '<div style="color:var(--mut)">Nenhum estágio disponível ainda.</div>';
+    cards += card('exp', 'cardExp', f.bestExp);
+  if (f.push) cards += card('push', 'cardPush', f.push);
+  $('cards').innerHTML = cards || `<div style="color:var(--mut)">${T('noStages')}</div>`;
 
-  // table
+  // table — same farmable pool the engine ranks over
   const all   = (f.all || []).filter(r => r.cleared || (f.current && r.key === f.current.key));
   const carry = (rec.level || []).slice().sort((a, b) => b.level - a.level)[0]
               || { level: f.partyLevel || 1, heroExp: 0 };
@@ -434,28 +579,23 @@ function render(rec) {
   const proj  = (r, h) => gold
     ? (r.goldPerHour || 0) * h
     : ENG.projectLevel(carry.level, carry.heroExp, r.expPerSec, r.lvl, h);
-  const fmtH  = (n, h) => gold
-    ? fmtK(n)
-    : n != null ? n.toFixed(1) : '-';
+  const fmtH  = (n) => gold ? fmtK(n) : (n != null ? n.toFixed(1) : '-');
 
   all.sort((a, b) => proj(b, farmHorizon) - proj(a, farmHorizon));
 
-  const ths = HRS.map(h =>
-    `<th class="hz-col">${h}h</th>`
-  ).join('');
+  const ths = HRS.map(h => `<th class="hz-col">${h}h</th>`).join('');
 
   const rows = all.map(r => {
     const isCur      = f.current && r.key === f.current.key;
     const isBestGold = f.bestGold && r.key === f.bestGold.key;
     const isBestExp  = f.bestExp  && r.key === f.bestExp.key;
     const rowCls     = isCur ? 'is-cur' : isBestGold ? 'is-best-gold' : isBestExp ? 'is-best-exp' : '';
-    const badges     = (isCur      ? '<span class="row-badge rb-cur">agora</span>'  : '')
-                     + (isBestGold ? '<span class="row-badge rb-gold">melhor ouro</span>' : '')
-                     + (isBestExp  ? '<span class="row-badge rb-exp">melhor exp</span>'  : '');
+    const badges     = (isCur      ? `<span class="row-badge rb-cur">${T('bNow')}</span>`  : '')
+                     + (isBestGold ? `<span class="row-badge rb-gold">${T('bGold')}</span>` : '')
+                     + (isBestExp  ? `<span class="row-badge rb-exp">${T('bExp')}</span>`  : '');
     const projCols = HRS.map(h => {
-      const v   = proj(r, h);
       const cls = h === farmHorizon ? 'td-proj' : '';
-      return `<td class="${cls}">${fmtH(v, h)}</td>`;
+      return `<td class="${cls}">${fmtH(proj(r, h))}</td>`;
     }).join('');
     return `<tr class="${rowCls}">
       <td>${stageCell(r.key, r.diff)}${badges}</td>
@@ -465,12 +605,11 @@ function render(rec) {
     </tr>`;
   }).join('');
 
-  const projHdr = gold ? 'Ouro proj.' : 'Nível proj.';
-  document.getElementById('tbl-body').innerHTML = `
+  $('tbl-body').innerHTML = `
     <table>
       <thead>
         <tr>
-          <th style="text-align:left">Estágio</th>
+          <th style="text-align:left">${T('colStage')}</th>
           <th>EXP/H</th>
           <th>GOLD/H</th>
           ${ths}
@@ -481,6 +620,7 @@ function render(rec) {
 }
 
 // ── start ─────────────────────────────────
+applyLang();
 init();
 </script>
 </body>
