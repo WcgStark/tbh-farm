@@ -386,13 +386,27 @@ function measuredClearSec() {
   }
   return dc > 0 ? dt / dc : null;
 }
-// persist the measured clear time per stage → fit model across stages
-function storeClear(psd, cs) {
+// persist the measured clear time per stage → fit model across stages.
+// Stamp the party DPS so we can detect when the model is stale (you got stronger).
+function storeClear(psd, cs, dps) {
   if (cs == null || !(cs > 5 && cs < 900)) return;
   const sk = String(psd.commonSaveData.currentStageKey), st = DB.stages[sk];
   if (!st) return;
-  clearStore[sk] = { hp: st.totalHP, waves: st.waves, clearSec: cs };
+  clearStore[sk] = { hp: st.totalHP, waves: st.waves, clearSec: cs, dps: dps || 0 };
   try { localStorage.setItem('tbh_clearmodel', JSON.stringify(clearStore)); } catch (e) {}
+}
+// Drop stored clears measured at a very different power level — a clear time
+// from when you were 1.35× weaker/stronger no longer reflects reality. This
+// makes the model recalibrate automatically after a damage jump.
+function pruneStaleClears(curDps) {
+  if (!(curDps > 0)) return false;
+  let changed = false;
+  for (const k of Object.keys(clearStore)) {
+    const d = clearStore[k].dps;
+    if (d > 0 && (curDps > d * 1.35 || curDps < d * 0.74)) { delete clearStore[k]; changed = true; }
+  }
+  if (changed) { try { localStorage.setItem('tbh_clearmodel', JSON.stringify(clearStore)); } catch (e) {} }
+  return changed;
 }
 
 // ── save decryption ───────────────────────
@@ -428,15 +442,23 @@ async function loadSave(b64) {
     // feed the calibration sampler with this fresh save
     pushSample(psd);
     const gps = rateOf('g'), eps = rateOf('x'), cs = measuredClearSec();
-    storeClear(psd, cs);
 
-    const rec = ENG.recommend(psd, {
+    const opts = {
       goldPerSec:   gps != null ? gps : undefined,
       expPerSec:    eps != null ? eps : undefined,
       clearSec:     cs  != null ? cs  : undefined,
       clearSamples: Object.values(clearStore),
       elapsedSec:   0,
-    });
+    };
+    let rec = ENG.recommend(psd, opts);
+
+    // now that we know the current party DPS, drop any stored clears measured at
+    // a very different power level, store this stage's clear, and recompute if stale
+    const dps = rec.meta.partyDPS;
+    const pruned = pruneStaleClears(dps);
+    storeClear(psd, cs, dps);
+    if (pruned) { opts.clearSamples = Object.values(clearStore); rec = ENG.recommend(psd, opts); }
+
     lastRec = rec;
     render(rec);
     setStatus('live', 'st_live');
